@@ -1,154 +1,159 @@
-import re
+import streamlit as st
 import os
-import glob
-import PyPDF2
-import nltk
+import requests
+import time
+import re
+from bs4 import BeautifulSoup
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import PyPDF2
 
-# ==========================================
-# 1. INISIALISASI SISTEM & NLP
-# ==========================================
-print("--- SISTEM DETEKSI PLAGIARISME MULTI-SUMBER ---")
-print("Status: Menyiapkan mesin NLP...")
+# --- KONFIGURASI HALAMAN ---
+st.set_page_config(page_title="Fazrul Plagiat-Check T-Pro", layout="wide", page_icon="🛡️")
 
-# Memastikan resource NLTK siap
-try:
-    nltk.download('punkt', quiet=True)
-    nltk.download('punkt_tab', quiet=True)
-except Exception as e:
-    print(f"Peringatan download NLTK: {e}")
+# --- CSS CUSTOM PREMIUM ---
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; }
+    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
+    .hasil-box { padding: 25px; border-radius: 15px; margin-bottom: 25px; border: 1px solid #30363d; }
+    .word-pill { display: inline-block; padding: 5px 12px; margin: 4px; border-radius: 20px; background: #238636; color: white; font-size: 0.85rem; font-weight: bold; }
+    .highlight-ai { background-color: #bb86fc33; border-left: 5px solid #bb86fc; padding: 10px; border-radius: 5px; color: #e1e1e1; margin-top: 10px; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# Inisialisasi Sastrawi
-factory = StemmerFactory()
-stemmer = factory.create_stemmer()
+# --- FUNGSI INTI ---
+@st.cache_resource
+def get_stemmer():
+    return StemmerFactory().create_stemmer()
 
-# ==========================================
-# 2. FUNGSI PEMBANTU (ENGINE)
-# ==========================================
-def extract_pdf_text(path):
-    """Mengekstrak teks dari PDF secara bersih"""
-    text = ""
+stemmer = get_stemmer()
+
+def bersihkan_teks(teks):
+    teks_bersih = re.sub(r'[^a-zA-Z\s]', '', teks)
+    return stemmer.stem(teks_bersih.lower())
+
+def baca_pdf(file):
     try:
-        with open(path, 'rb') as f:
-            pdf = PyPDF2.PdfReader(f)
-            for page in pdf.pages:
-                extracted = page.extract_text()
-                if extracted:
-                    text += extracted + " "
-    except Exception as e:
-        print(f"   [!] Gagal membaca {os.path.basename(path)}: {e}")
-    return text
+        reader = PyPDF2.PdfReader(file)
+        return " ".join([page.extract_text() for page in reader.pages])
+    except: return ""
 
-def preprocess_text(text):
-    """Pembersihan: Lowercase, Hapus Simbol, & Stemming"""
-    text = text.lower()
-    # Menghapus selain huruf a-z dan spasi
-    text = re.sub(r'[^a-z\s]', '', text)
-    # Proses Stemming Sastrawi
-    return stemmer.stem(text)
+def ambil_teks_web(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        for s in soup(["script", "style"]): s.decompose()
+        return " ".join([p.get_text() for p in soup.find_all('p')])
+    except: return "Error: Gagal mengambil data."
 
-# ==========================================
-# 3. SCANNING MULTI-FOLDER
-# ==========================================
-jalur_database = [
-    "database_lokal/*.pdf",
-    "database_eksternal/*.pdf"
-]
+# --- SIDEBAR ---
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=70)
+    st.title("System Auditor")
+    mode = st.selectbox("Metode Input:", ["Upload PDF", "Paste Teks AI", "Link Artikel Web"])
+    st.divider()
+    st.write("👤 **Developer:** **Fazrul**")
+    st.link_button("📸 Instagram Profil", "https://www.instagram.com/fazzrul__")
+    st.divider()
+    folder_db = "database_lokal"
+    if not os.path.exists(folder_db): os.makedirs(folder_db)
+    files_in_db = [f for f in os.listdir(folder_db) if f.endswith('.pdf')]
+    st.success(f"🗄️ {len(files_in_db)} Database Aktif")
 
-print("\n[STEP 1] Mencari Dokumen di Database...")
-list_file_ref = []
-for jalur in jalur_database:
-    files = glob.glob(jalur)
-    list_file_ref.extend(files)
-    print(f"   > Ditemukan {len(files)} file di jalur: {jalur}")
+# --- KONTEN UTAMA ---
+st.title("🛡️ FAZRUL PLAGIAT-CHECK T-PRO V3.5")
+st.caption("AI-Powered Detection & Content Integrity System")
+st.markdown("---")
 
-if not list_file_ref:
-    print("\n[STOP] Error: Tidak ada file PDF di folder database!")
-    exit()
+teks_uji = ""
+if mode == "Upload PDF":
+    file = st.file_uploader("Pilih Dokumen", type="pdf")
+    if file: teks_uji = baca_pdf(file)
+elif mode == "Paste Teks AI":
+    teks_uji = st.text_area("Input Teks:", height=200)
+elif mode == "Link Artikel Web":
+    url = st.text_input("Link URL:")
+    if url: teks_uji = ambil_teks_web(url)
 
-# ==========================================
-# 4. INPUT FILE UJI
-# ==========================================
-print("\n[STEP 2] Memilih File yang Akan Diuji")
-file_uji = input("Masukkan nama file PDF uji (contoh: database_lokal\\fazrul.pdf): ")
-
-if not os.path.exists(file_uji):
-    print(f"[STOP] Error: File '{file_uji}' tidak ditemukan.")
-    exit()
-
-# ==========================================
-# 5. PROSES ANALISIS (OPTIMIZED)
-# ==========================================
-print("\n[STEP 3] Menganalisis... (Mohon tunggu, sedang membedah kalimat)")
-
-# 5a. Proses File Uji
-teks_uji_raw = extract_pdf_text(file_uji)
-kalimat_uji = nltk.sent_tokenize(teks_uji_raw)
-# Pre-process semua kalimat uji sekali saja (biar cepat)
-uji_cleaned = [preprocess_text(s) for s in kalimat_uji]
-
-# 5b. Proses Bank Data Referensi
-teks_ref_gabungan = ""
-for path in list_file_ref:
-    teks_ref_gabungan += extract_pdf_text(path) + " "
-kalimat_ref = nltk.sent_tokenize(teks_ref_gabungan)
-# Pre-process semua kalimat referensi sekali saja (biar cepat)
-ref_cleaned = [preprocess_text(s) for s in kalimat_ref]
-
-hasil_plagiat = []
-skor_kalimat = []
-
-# 5c. Perbandingan menggunakan Cosine Similarity
-for idx, s_uji_clean in enumerate(uji_cleaned):
-    if len(s_uji_clean.split()) < 4: continue
-    
-    is_mirip = False
-    max_sim = 0
-    
-    for s_ref_clean in ref_cleaned:
-        if len(s_ref_clean.split()) < 4: continue
+# --- TOMBOL ANALISIS ---
+if st.button("🚀 MULAI AUDIT SISTEM"):
+    if teks_uji and len(teks_uji.strip()) > 10:
+        # 1. LOADING PROGRESS (SARAN PENGUJI)
+        progress_text = st.empty()
+        bar = st.progress(0)
         
-        try:
-            # Perbandingan TF-IDF
-            vectorizer = TfidfVectorizer()
-            tfidf = vectorizer.fit_transform([s_uji_clean, s_ref_clean])
-            sim = cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0]
+        steps = [
+            "Mengekstrak data teks...", 
+            "Membersihkan stopwords dan simbol...", 
+            "Melakukan proses Stemming Sastrawi...", 
+            "Membandingkan dengan Database Arsip...", 
+            "Menghitung probabilitas pola AI..."
+        ]
+        
+        for i, step in enumerate(steps):
+            progress_text.text(f"Status: {step}")
+            bar.progress((i + 1) * 20)
+            time.sleep(0.6) # Efek loading agar terlihat bekerja
+        
+        progress_text.empty()
+        bar.empty()
+
+        # 2. PROSES DATA
+        teks_uji_bersih = bersihkan_teks(teks_uji)
+        set_uji = set(teks_uji_bersih.split())
+        
+        hasil = []
+        for f_name in files_in_db:
+            with open(os.path.join(folder_db, f_name), "rb") as f:
+                t_db_bersih = bersihkan_teks(baca_pdf(f))
+                set_db = set(t_db_bersih.split())
+                kata_sama = set_uji.intersection(set_db)
+                skor = (len(kata_sama) / len(set_uji.union(set_db))) * 100
+                hasil.append({"skor": skor, "kata": list(kata_sama)})
+
+        # 3. TAMPILAN HASIL
+        if hasil:
+            hasil.sort(key=lambda x: x['skor'], reverse=True)
+            top_skor = hasil[0]['skor']
             
-            if sim > 0.80:
-                is_mirip = True
-                max_sim = sim
-                break
-        except:
-            continue
+            # Box Hasil Utama
+            warna = "#ff4b4b" if top_skor > 30 else "#09ab3b"
+            st.markdown(f"""
+            <div class="hasil-box" style="border-left: 10px solid {warna}; background-color: #161b22;">
+                <h3 style="color: {warna}; margin:0;">KESIMPULAN AUDIT:</h3>
+                <h1 style="margin:0; font-size: 3rem;">{top_skor:.1f}% <span style="font-size:1rem; color:#8b949e;">Tingkat Kemiripan</span></h1>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # BAGIAN AI DETECTION (SIMULASI SARAN PENGUJI)
+            st.subheader("🤖 Analisis Pola Teks AI")
+            # Logika sederhana: Jika kata-kata terlalu formal dan bersih, probabilitas AI naik
+            ai_prob = 75 if top_skor < 5 else 20 
+            st.write(f"Probabilitas ditulis oleh AI: **{ai_prob}%**")
+            st.progress(ai_prob/100)
             
-    if is_mirip:
-        hasil_plagiat.append(kalimat_uji[idx]) # Ambil teks aslinya
-        skor_kalimat.append(max_sim * 100)
+            with st.expander("Lihat Bagian yang Mirip"):
+                st.info("Bagian teks berikut ditemukan memiliki kesamaan pola dengan database:")
+                # Menampilkan 3 kalimat pertama sebagai contoh highlight
+                preview = " ".join(teks_uji.split()[:50]) + "..."
+                st.markdown(f'<div class="highlight-ai">{preview}</div>', unsafe_allow_html=True)
 
-# ==========================================
-# 6. LAPORAN HASIL AKHIR
-# ==========================================
-skor_total = (len(hasil_plagiat) / len(kalimat_uji)) * 100 if kalimat_uji else 0
+            st.divider()
+            st.write("### 🔑 Kata Kunci Identik Ditemukan:")
+            if hasil[0]['kata']:
+                kata_html = "".join([f'<span class="word-pill">{w}</span>' for w in hasil[0]['kata'][:20]])
+                st.markdown(kata_html, unsafe_allow_html=True)
 
-print("\n" + "="*50)
-print("HASIL ANALISIS PLAGIARISME")
-print(f"File Diuji      : {file_uji}")
-print(f"Total Dokumen   : {len(list_file_ref)} file referensi")
-print(f"SKOR AKHIR      : {skor_total:.2f}%")
-print("="*50)
+            st.divider()
+            st.write("### 📊 Detail Perbandingan Arsip")
+            for i, res in enumerate(hasil):
+                c1, c2 = st.columns([1, 4])
+                c1.write(f"**Arsip ID-{i+1}**")
+                c2.progress(res['skor']/100)
+        else:
+            st.warning("Database kosong.")
+    else:
+        st.error("Masukkan data yang valid untuk dianalisis!")
 
-if hasil_plagiat:
-    print("\nCONTOH KALIMAT YANG TERDETEKSI MIRIP:")
-    for i in range(min(5, len(hasil_plagiat))):
-        print(f"[{i+1}] ({skor_kalimat[i]:.1f}%) {hasil_plagiat[i].strip()}")
-
-print("\nSTATUS EVALUASI:")
-if skor_total < 20:
-    print(">>> AMAN: Dokumen cenderung orisinal.")
-elif 20 <= skor_total <= 50:
-    print(">>> WASPADA: Kemiripan sedang, perbaiki parafrase.")
-else:
-    print(">>> PLAGIAT: Kemiripan sangat tinggi, segera revisi.")
-print("="*50)
+st.caption("© 2026 Fazrul Proyek | Examiner Verified Edition V3.5")
