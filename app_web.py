@@ -1,34 +1,44 @@
 import streamlit as st
 import os
+import requests
+from bs4 import BeautifulSoup
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import PyPDF2
-from docx import Document
 
 # Konfigurasi Halaman
-st.set_page_config(page_title="Verifikasi-AI Pro", layout="wide")
+st.set_page_config(page_title="Fazrul-PlagiaCheck Pro", layout="wide", page_icon="🛡️")
 
-# CSS untuk tampilan lebih keren
-st.markdown("""
-    <style>
-    .main { background-color: #0e1117; }
-    .stTextArea textarea { background-color: #161b22; color: white; border: 1px solid #30363d; }
-    </style>
-    """, unsafe_allow_html=True)
+# Inisialisasi Sastrawi
+@st.cache_resource
+def get_stemmer():
+    factory = StemmerFactory()
+    return factory.create_stemmer()
 
-# Inisialisasi Stemmer Sastrawi
-factory = StemmerFactory()
-stemmer = factory.create_stemmer()
+stemmer = get_stemmer()
 
 def bersihkan_teks(teks):
     teks = teks.lower()
     return stemmer.stem(teks)
 
 def baca_pdf(file):
-    reader = PyPDF2.PdfReader(file)
-    teks = ""
-    for page in reader.pages:
-        teks += page.extract_text()
-    return teks
+    try:
+        reader = PyPDF2.PdfReader(file)
+        teks = ""
+        for page in reader.pages:
+            teks += page.extract_text()
+        return teks
+    except:
+        return ""
+
+def ambil_teks_web(url):
+    try:
+        response = requests.get(url, timeout=5)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Ambil teks dari paragraf saja
+        paragraphs = soup.find_all('p')
+        return " ".join([p.get_text() for p in paragraphs])
+    except:
+        return "Error: Gagal mengambil data dari URL. Pastikan link benar."
 
 def hitung_kemiripan(teks1, teks2):
     set1 = set(teks1.split())
@@ -37,67 +47,80 @@ def hitung_kemiripan(teks1, teks2):
     irisan = set1.intersection(set2)
     return (len(irisan) / len(set1.union(set2))) * 100
 
+# Tampilan UI
+st.title("🛡️ FAZRUL PLAGIA-CHECK PRO V3.0")
+st.markdown("---")
+
 # Sidebar
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=100)
-    st.title("Audit Sistem")
-    mode = st.radio("Pilih Metode Uji:", ["Upload File PDF", "Paste Teks (AI/Internet)"])
+    st.header("⚙️ Panel Kontrol")
+    opsi = st.selectbox("Pilih Sumber Data:", ["Upload PDF", "Paste Teks AI", "Link Artikel Web"])
     st.divider()
-    st.info("Sistem ini membandingkan teks dengan database lokal untuk verifikasi keaslian.")
+    st.write("📊 **Status Database:**")
+    if os.path.exists("database_lokal"):
+        jml = len([f for f in os.listdir("database_lokal") if f.endswith('.pdf')])
+        st.success(f"{jml} Dokumen di Database")
+    
+    if st.button("Hapus Cache"):
+        st.cache_resource.clear()
+        st.rerun()
 
-st.title("🛡️ VERIFIKASI-AI PRO")
-st.subheader("Sistem Deteksi Kemiripan & Validasi Dokumen")
-
+# Logika Input
 teks_uji = ""
+if opsi == "Upload PDF":
+    file = st.file_uploader("Unggah file PDF", type="pdf")
+    if file: teks_uji = baca_pdf(file)
+elif opsi == "Paste Teks AI":
+    teks_uji = st.text_area("Tempel teks di sini:", height=250)
+elif opsi == "Link Artikel Web":
+    url = st.text_input("Masukkan URL Website (Contoh: https://berita.com/artikel)")
+    if url:
+        with st.spinner("Mengambil teks dari internet..."):
+            teks_uji = ambil_teks_web(url)
+            if "Error" in teks_uji:
+                st.error(teks_uji)
+                teks_uji = ""
+            else:
+                st.success("Teks berhasil ditarik!")
 
-# Input Section
-if mode == "Upload File PDF":
-    file_upload = st.file_uploader("Unggah Dokumen Uji (PDF)", type=["pdf"])
-    if file_upload:
-        teks_uji = baca_pdf(file_upload)
-else:
-    teks_uji = st.text_area("Tempel Teks dari Internet/AI di sini:", placeholder="Paste teks ChatGPT atau artikel web di sini...", height=300)
-
-if st.button("Mulai Verifikasi Sekarang"):
+# Eksekusi Analisis
+if st.button("🚀 JALANKAN ANALISIS SEKARANG"):
     if teks_uji:
-        with st.spinner("Sedang menganalisis teks..."):
-            teks_uji_bersih = bersihkan_teks(teks_uji)
-            
-            # Cek ke Database Lokal
-            folder_db = "database_lokal"
-            hasil_akhir = []
-            
+        teks_uji_bersih = bersihkan_teks(teks_uji)
+        folder_db = "database_lokal"
+        hasil = []
+
+        with st.spinner("Membandingkan dengan database..."):
             if os.path.exists(folder_db):
-                for file_name in os.listdir(folder_db):
-                    if file_name.endswith(".pdf"):
-                        with open(os.path.join(folder_db, file_name), "rb") as f:
-                            teks_db = baca_pdf(f)
-                            teks_db_bersih = bersihkan_teks(teks_db)
-                            skor = hitung_kemiripan(teks_uji_bersih, teks_db_bersih)
-                            hasil_akhir.append((file_name, skor))
-            
-            # Tampilkan Hasil
-            st.divider()
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.metric("Total Kata Diproses", len(teks_uji.split()))
-            
-            with col2:
-                if hasil_akhir:
-                    max_skor = max(hasil_akhir, key=lambda x: x[1])
-                    st.metric("Tingkat Kemiripan Tertinggi", f"{max_skor[1]:.2f}%")
-                else:
-                    st.warning("Database kosong.")
+                for f_name in os.listdir(folder_db):
+                    if f_name.endswith(".pdf"):
+                        with open(os.path.join(folder_db, f_name), "rb") as f:
+                            t_db = baca_pdf(f)
+                            t_db_bersih = bersihkan_teks(t_db)
+                            skor = hitung_kemiripan(teks_uji_bersih, t_db_bersih)
+                            hasil.append((f_name, skor))
 
-            if hasil_akhir:
-                st.write("### Detail Analisis Database:")
-                for nama, skor in hasil_akhir:
-                    progress_color = "red" if skor > 50 else "green"
-                    st.write(f"**{nama}**")
-                    st.progress(skor/100)
-                    st.write(f"Tingkat kemiripan: {skor:.2f}%")
+        # Tampilan Hasil
+        st.subheader("📋 Hasil Verifikasi")
+        if hasil:
+            # Cari skor tertinggi
+            hasil.sort(key=lambda x: x[1], reverse=True)
+            top_file, top_skor = hasil[0]
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Skor Tertinggi", f"{top_skor:.1f}%")
+            col2.metric("Sumber Terdekat", top_file)
+            col3.metric("Status", "⚠️ Plagiat" if top_skor > 30 else "✅ Aman")
+
+            st.write("### Grafik Perbandingan:")
+            for nama, skor in hasil:
+                label = f"{nama} ({skor:.1f}%)"
+                st.progress(skor/100)
+                st.caption(label)
+        else:
+            st.warning("Tidak ada dokumen PDF di folder database_lokal untuk dibandingkan.")
     else:
-        st.error("Silakan masukkan teks atau upload file terlebih dahulu!")
+        st.error("Masukkan data terlebih dahulu!")
 
-st.caption("Developed by Fazrul | Versi 2.0 (Live Update)")
+st.markdown("---")
+st.caption("© 2026 Fazrul Proyek - Update Berkala Aktif")
