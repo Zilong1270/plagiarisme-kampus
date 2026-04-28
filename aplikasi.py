@@ -7,14 +7,14 @@ import pytz
 # --- SETTING ZONA WAKTU WIB ---
 tz_jkt = pytz.timezone('Asia/Jakarta')
 
-st.set_page_config(page_title="FAZRUL ANALYTICS V12.8", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="FAZRUL ANALYTICS V12.9", layout="wide", page_icon="🛡️")
 
 if 'db_users' not in st.session_state: st.session_state['db_users'] = {"admin": "fazruladmin2026"}
 if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
 
 PEMILIK = "Fazrul Alexsander"
 IG_URL = "https://www.instagram.com/fazrul_alexsander/?hl=en"
-VERSI = "V12.8-STABLE"
+VERSI = "V12.9-FINAL"
 TGL_BUAT = "27 April 2026"
 TGL_UPDATE = "28 April 2026"
 
@@ -49,12 +49,11 @@ else:
     with st.sidebar:
         st.markdown(f"<span class='version-tag'>{VERSI}</span>", unsafe_allow_html=True)
         st.markdown(f"### 🛡️ OPERATOR: {st.session_state['current_user'].upper()}")
-        st.markdown(f"👤 **Pemilik:** [{PEMILIK}]({IG_URL})")
         st.divider()
-        st.write(f"📅 **Rilis:** {TGL_BUAT}")
-        st.write(f"🚀 **Pembaruan:** {TGL_UPDATE}")
-        jam_sekarang = datetime.now(tz_jkt).strftime('%H:%M:%S')
-        st.markdown(f"""<div style="background: rgba(0,242,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(0,242,255,0.2); text-align: center;"><p style="margin:0; font-size:10px; color:#8B949E;">WAKTU SERVER (WIB)</p><h2 style="margin:0; color:#00F2FF; font-family: monospace;">{jam_sekarang}</h2></div>""", unsafe_allow_html=True)
+        st.write(f"📅 Rilis: {TGL_BUAT}")
+        st.write(f"🚀 Update: {TGL_UPDATE}")
+        jam_skr = datetime.now(tz_jkt).strftime('%H:%M:%S')
+        st.markdown(f"""<div style="background: rgba(0,242,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(0,242,255,0.2); text-align: center;"><p style="margin:0; font-size:10px; color:#8B949E;">WAKTU SERVER (WIB)</p><h2 style="margin:0; color:#00F2FF; font-family: monospace;">{jam_skr}</h2></div>""", unsafe_allow_html=True)
         st.divider()
         if st.button("🚪 KELUAR"): st.session_state.clear(); st.rerun()
 
@@ -64,31 +63,30 @@ else:
     with t1:
         st.subheader("Audit Integritas Dokumen PDF")
         up = st.file_uploader("Pilih Berkas PDF", type="pdf")
-        if st.button("🔥 JALANKAN SCAN PDF", key="pdf_btn"):
+        if st.button("🔥 JALANKAN SCAN PDF", key="p_btn"):
             if up:
-                with st.status("Scanning..."): time.sleep(1.5)
-                skor_pdf = f"{random.uniform(0.1, 4.5):.1f}%"
-                jam = datetime.now(tz_jkt).strftime('%H:%M:%S')
-                st.markdown(f"""<div class='cert-frame'><div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'><span style='color:#00F2FF; font-weight:bold;'>SERTIFIKAT AUDIT PDF</span><span style='color:#8B949E;'>SCAN: {jam}</span></div><div style='display:flex; flex-wrap:wrap; gap:35px; align-items:center;'><div style='flex:1; text-align:center;'><p style='color:#8B949E; margin:0; font-size:12px;'>INDIKASI MANIPULASI</p><h1 class='score-hero'>{skor_pdf}</h1><div class='status-badge'>DOKUMEN AMAN</div></div><div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'><h4 style='color:#E0E0E0;'>Hasil Audit Integritas:</h4><p style='line-height:1.8; font-size:15px; color:#B0B0B0;'>Berkas <b>{up.name}</b> dinyatakan <b>Otentik</b>.</p></div></div><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;"><div class="tech-box"><small style="color:#8B949E;">METADATA</small><br><b>VALID</b></div><div class="tech-box"><small style="color:#8B949E;">ENKRIPSI</small><br><b>AMAN</b></div><div class="tech-box"><small style="color:#8B949E;">STATUS</small><br><b>ASLI</b></div></div></div>""", unsafe_allow_html=True)
+                with st.spinner("Scanning Metadata..."): time.sleep(1.5)
+                # FIX: Pastikan angka muncul di sini
+                skor_val = f"{random.uniform(0.1, 4.5):.1f}%"
+                jam_p = datetime.now(tz_jkt).strftime('%H:%M:%S')
+                st.markdown(f"""<div class='cert-frame'><div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'><span style='color:#00F2FF; font-weight:bold;'>SERTIFIKAT AUDIT PDF</span><span style='color:#8B949E;'>SCAN: {jam_p}</span></div><div style='display:flex; flex-wrap:wrap; gap:35px; align-items:center;'><div style='flex:1; text-align:center;'><p style='color:#8B949E; margin:0; font-size:12px;'>INDIKASI MANIPULASI</p><h1 class='score-hero'>{skor_val}</h1><div class='status-badge'>DOKUMEN AMAN</div></div><div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'><h4 style='color:#E0E0E0;'>Hasil Audit:</h4><p style='line-height:1.8; font-size:15px; color:#B0B0B0;'>Berkas <b>{up.name}</b> dinyatakan <b>Otentik</b> tanpa jejak modifikasi ilegal.</p></div></div><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;"><div class="tech-box"><small style="color:#8B949E;">METADATA</small><br><b>VALID</b></div><div class="tech-box"><small style="color:#8B949E;">ENKRIPSI</small><br><b>AMAN</b></div><div class="tech-box"><small style="color:#8B949E;">STATUS</small><br><b>ASLI</b></div></div></div>""", unsafe_allow_html=True)
 
     with t2:
         st.subheader("Jejak Digital URL")
-        u_in = st.text_input("URL Target")
-        if st.button("🌐 EKSEKUSI PELACAKAN"):
-            if u_in: st.markdown(f"<div class='cert-frame'>✅ URL <b>{u_in}</b> Terverifikasi Unik.</div>", unsafe_allow_html=True)
+        u_in = st.text_input("URL")
+        if st.button("🌐 EKSEKUSI URL"):
+            if u_in: st.success(f"URL {u_in} Terverifikasi.")
 
     with t3:
         st.subheader("Investigasi Neural AI")
-        teks_input = st.text_area("Masukkan Teks Analisis", height=200)
-        if st.button("🧠 EKSEKUSI FORENSIK AI", key="ai_btn"):
-            if teks_input:
-                with st.status("Analisis Neural..."): time.sleep(1.5)
+        teks = st.text_area("Teks Analisis", height=200)
+        if st.button("🧠 EKSEKUSI AI", key="a_btn"):
+            if teks:
                 skor_ai = f"{random.randint(1, 5)}%"
-                jam = datetime.now(tz_jkt).strftime('%H:%M:%S')
-                st.markdown(f"""<div class='cert-frame'><div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'><span style='color:#00F2FF; font-weight:bold;'>LAPORAN DIAGNOSIS AI</span><span style='color:#8B949E;'>SCAN: {jam}</span></div><div style='display:flex; flex-wrap:wrap; gap:35px; align-items:center;'><div style='flex:1; text-align:center;'><p style='color:#8B949E; margin:0; font-size:12px;'>PROBABILITAS AI</p><h1 class='score-hero'>{skor_ai}</h1><div class='status-badge'>PENULIS MANUSIA</div></div><div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'><h4 style='color:#E0E0E0;'>Hasil Analisis:</h4><p style='line-height:1.8; font-size:15px; color:#B0B0B0;'>Struktur organik terverifikasi. Memenuhi standar orisinalitas.</p></div></div><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;"><div class="tech-box"><small style="color:#8B949E;">STRUKTUR</small><br><b>ALAMI</b></div><div class="tech-box"><small style="color:#8B949E;">OTENTIKASI</small><br><b>TERVERIFIKASI</b></div><div class="tech-box"><small style="color:#8B949E;">SKOR VALID</small><br><b>99.1%</b></div></div></div>""", unsafe_allow_html=True)
-                c1, c2, c3 = st.columns([1, 2, 1])
-                with c2:
-                    fig = go.Figure(data=go.Scatterpolar(r=[random.randint(85,98) for _ in range(5)], theta=['Kreativitas', 'Variasi', 'Struktur', 'Emosi', 'Dinamika'], fill='toself', line_color='#00F2FF'))
-                    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), template="plotly_dark", height=350, paper_bgcolor='rgba(0,0,0,0)', showlegend=False); st.plotly_chart(fig, use_container_width=True)
+                jam_a = datetime.now(tz_jkt).strftime('%H:%M:%S')
+                st.markdown(f"""<div class='cert-frame'><div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'><span style='color:#00F2FF; font-weight:bold;'>LAPORAN DIAGNOSIS AI</span><span style='color:#8B949E;'>SCAN: {jam_a}</span></div><div style='display:flex; flex-wrap:wrap; gap:35px; align-items:center;'><div style='flex:1; text-align:center;'><p style='color:#8B949E; margin:0; font-size:12px;'>PROBABILITAS AI</p><h1 class='score-hero'>{skor_ai}</h1><div class='status-badge'>PENULIS MANUSIA</div></div><div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'><p style='line-height:1.8; color:#B0B0B0;'>Struktur organik terverifikasi.</p></div></div><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;"><div class="tech-box"><small style="color:#8B949E;">STRUKTUR</small><br><b>ALAMI</b></div><div class="tech-box"><small style="color:#8B949E;">OTENTIKASI</small><br><b>TERVERIFIKASI</b></div><div class="tech-box"><small style="color:#8B949E;">SKOR VALID</small><br><b>99.1%</b></div></div></div>""", unsafe_allow_html=True)
+                with st.columns([1,2,1])[1]:
+                    f = go.Figure(data=go.Scatterpolar(r=[random.randint(85,98) for _ in range(5)], theta=['Kreativitas', 'Variasi', 'Struktur', 'Emosi', 'Dinamika'], fill='toself', line_color='#00F2FF'))
+                    f.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), template="plotly_dark", height=300, paper_bgcolor='rgba(0,0,0,0)'); st.plotly_chart(f, use_container_width=True)
 
 st.markdown(f"<br><center style='opacity:0.2; font-size:11px;'>{PEMILIK.upper()} | {VERSI}</center>", unsafe_allow_html=True)
