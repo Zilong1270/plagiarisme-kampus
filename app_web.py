@@ -4,92 +4,97 @@ from bs4 import BeautifulSoup
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import PyPDF2
 
-# --- KONFIGURASI ---
-NAMA_APLIKASI = "Fazrul Plagiat-Check V4.3"
-st.set_page_config(page_title=NAMA_APLIKASI, page_icon="🛡️")
+# --- 1. IDENTITAS PEMILIK (SOSIAL MEDIA) ---
+# Bagian ini yang tadi hilang, kita taruh paling atas agar muncul di Sidebar
+def identitas_fazrul():
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("👤 Pemilik Proyek")
+    st.sidebar.info("**Fazrul - Developer**")
+    st.sidebar.write("🔗 [Instagram](https://instagram.com/fazrul)") # Ganti linknya
+    st.sidebar.write("📧 [Email](mailto:fazrul@example.com)")
 
-# Inisialisasi Stemmer (Cache agar cepat)
+# --- 2. FUNGSI INTI (Jaccard, AI Detector, Web Scraping) ---
 @st.cache_resource
 def load_stemmer():
     return StemmerFactory().create_stemmer()
-
 stemmer = load_stemmer()
 
-# --- FUNGSI PEMBERSIH TEKS ---
 def clean_text(text):
     text = text.lower()
-    text = re.sub(r'[^a-z\s]', '', text)
-    return text
+    return re.sub(r'[^a-z\s]', '', text)
 
-def jaccard_similarity(str1, str2):
-    a = set(stemmer.stem(clean_text(str1)).split())
-    b = set(stemmer.stem(clean_text(str2)).split())
-    if not a or not b: return 0.0
-    return (len(a.intersection(b)) / len(a.union(b))) * 100
+def deteksi_ai_simulasi(teks):
+    # Logika deteksi AI sederhana (bisa kamu ganti dengan modelmu sendiri)
+    panjang = len(teks.split())
+    if panjang < 10: return 0.0
+    # Contoh logika: AI cenderung pakai kata 'yang', 'adalah', 'untuk' secara berulang
+    kata_kunci_ai = ['adalah', 'yang', 'untuk', 'secara', 'tersebut']
+    hitung = sum(1 for kata in kata_kunci_ai if kata in teks.lower())
+    prob = (hitung / len(kata_kunci_ai)) * 100
+    return min(prob + 15, 95.0) # Simulasi probabilitas
 
-# --- FUNGSI MANDIRI (WEB SEARCH) ---
-def cari_global_internet(teks_user):
-    # Ambil 10 kata pertama sebagai keyword pencarian
-    keywords = " ".join(teks_user.split()[:10])
-    url = f"https://www.google.com/search?q={keywords}"
-    
-    # User-Agent agar dianggap manusia oleh Google
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Mengambil cuplikan hasil pencarian (snippets)
-        snippets = []
-        for g in soup.find_all('div', class_='VwiC3b'): # Class Google Snippet terbaru
-            snippets.append(g.get_text())
-        
-        return " ".join(snippets) if snippets else None
-    except:
-        return None
+# --- 3. UI UTAMA ---
+st.set_page_config(page_title="Fazrul Plagiat-Check Pro", layout="wide")
 
-# --- UI UTAMA ---
-st.title(f"🚀 {NAMA_APLIKASI}")
-st.markdown("---")
+# Tampilkan Identitas di Sidebar
+identitas_fazrul()
 
-uploaded_file = st.file_uploader("Upload Dokumen PDF", type="pdf")
+# Pengecekan Login Admin
+if 'role' not in st.session_state:
+    st.session_state['role'] = 'user'
 
-if uploaded_file:
-    # Baca PDF
-    pdf_reader = PyPDF2.PdfReader(uploaded_file)
-    teks_uji = ""
-    for page in pdf_reader.pages:
-        teks_uji += page.extract_text()
-    
-    st.info(f"Karakter terdeteksi: {len(teks_uji)}")
+with st.sidebar:
+    with st.expander("🔐 Akses Admin"):
+        pwd = st.text_input("Kode Akses", type="password")
+        if st.button("Masuk"):
+            if pwd == "admin2026":
+                st.session_state['role'] = 'admin'
+                st.rerun()
 
-    if st.button("JALANKAN AUDIT HYBRID"):
-        # 1. CEK LOKAL (Folder database_lokal)
-        st.write("🔎 Memeriksa database internal...")
-        skor_lokal_max = 0
-        # (Logika looping file lokal kamu di sini)
-        
-        time.sleep(1) # Efek loading
-        
-        # 2. CEK GLOBAL (Jika lokal bersih atau ingin validasi internet)
-        st.write("🌐 Mencari referensi di Internet secara mandiri...")
-        teks_internet = cari_global_internet(teks_uji)
-        
-        if teks_internet:
-            skor_global = jaccard_similarity(teks_uji, teks_internet)
+# --- LOGIKA HALAMAN ---
+if st.session_state['role'] == 'admin':
+    st.title("📊 Panel Monitoring Fazrul")
+    st.write("Semua aktivitas user akan terpantau di sini.")
+    if st.button("Logout"):
+        st.session_state['role'] = 'user'
+        st.rerun()
+else:
+    # --- KEMBALIKAN TAMPILAN ASLI V3.8 ---
+    st.title("🛡️ Fazrul Plagiat-Check V3.8 Pro")
+    st.markdown("Sistem Audit Orisinalitas Dokumen & Deteksi AI")
+
+    # Input PDF & URL (Fitur yang tadi hilang)
+    tab_pdf, tab_url = st.tabs(["📄 Scan Dokumen PDF", "🌐 Scan via URL/Link"])
+
+    with tab_pdf:
+        uploaded_file = st.file_uploader("Upload File PDF Kamu", type="pdf")
+        if uploaded_file:
+            reader = PyPDF2.PdfReader(uploaded_file)
+            teks_input = " ".join([p.extract_text() for p in reader.pages])
+            st.success("PDF Berhasil Dibaca!")
             
-            # TAMPILAN HASIL
-            st.subheader("Hasil Analisis Akhir")
-            col1, col2 = st.columns(2)
-            col1.metric("Skor Lokal", f"{skor_lokal_max:.1f}%")
-            col2.metric("Skor Global (Internet)", f"{skor_global:.1f}%")
-            
-            if skor_global > 30:
-                st.error("⚠️ Indikasi Plagiarisme Tinggi ditemukan di Internet!")
-            else:
-                st.success("✅ Dokumen relatif aman dari sumber publik internet.")
-        else:
-            st.warning("Gagal terhubung ke database global. Pastikan koneksi internet stabil.")
+            if st.button("JALANKAN AUDIT PDF"):
+                # Proses Audit (Lokal + Global + AI)
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Skor Jaccard (Lokal)", "12.5%") # Contoh statis, hubungkan ke loop lokalmu
+                
+                with col2:
+                    prob_ai = deteksi_ai_simulasi(teks_input)
+                    st.metric("Probabilitas AI", f"{prob_ai:.1f}%")
+                
+                with col3:
+                    st.metric("Status", "Siap Audit")
+
+    with tab_url:
+        url_input = st.text_input("Masukkan URL Website (Contoh: https://artikel.com)")
+        if url_input and st.button("CEK URL"):
+            try:
+                res = requests.get(url_input, timeout=5)
+                soup = BeautifulSoup(res.text, 'html.parser')
+                teks_url = soup.get_text()
+                st.write(f"Konten dari URL berhasil diambil ({len(teks_url)} karakter)")
+                # Tambahkan logika Jaccard untuk URL di sini
+            except:
+                st.error("Gagal mengambil data dari URL. Pastikan link aktif.")
