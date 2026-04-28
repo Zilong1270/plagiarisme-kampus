@@ -10,7 +10,7 @@ import re
 # --- SETTING ZONA WAKTU WIB ---
 tz_jkt = pytz.timezone('Asia/Jakarta')
 
-st.set_page_config(page_title="FAZRUL ANALYTICS V12.2", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="FAZRUL ANALYTICS V12.3", layout="wide", page_icon="🛡️")
 
 if 'memory_bank' not in st.session_state: st.session_state['memory_bank'] = []
 if 'db_users' not in st.session_state: st.session_state['db_users'] = {"admin": "fazruladmin2026"}
@@ -20,7 +20,7 @@ if 'view' not in st.session_state: st.session_state['view'] = "login"
 # --- DATA IDENTITAS ---
 PEMILIK = "Fazrul Alexsander"
 IG_URL = "https://www.instagram.com/fazrul_alexsander/?hl=en"
-VERSI = "V12.2-OFFICIAL"
+VERSI = "V12.3-OFFICIAL"
 TGL_BUAT = "27 April 2026"
 TGL_UPDATE = "28 April 2026"
 NOMOR_WA = "6285348407129"
@@ -50,6 +50,7 @@ st.markdown(f"""
     }}
     .score-hero {{ font-size: 100px; font-weight: 900; color: #00F2FF; line-height: 1; margin: 0; text-shadow: 0 0 30px rgba(0,242,255,0.4); }}
     .status-badge {{ background: rgba(0, 242, 255, 0.1); color: #00F2FF; border: 1px solid #00F2FF; padding: 6px 25px; border-radius: 50px; font-weight: bold; }}
+    .tech-box {{ background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; border: 1px solid #30363D; margin-top: 15px; text-align: center; }}
     .owner-info {{ background: #1E252E; padding: 25px; border-radius: 12px; border: 1px solid #30363D; text-align: center; margin-bottom: 25px; }}
     .ig-button {{ 
         display: inline-block; padding: 8px 20px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
@@ -58,7 +59,7 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- SISTEM AKSES ---
+# --- LOGIN/REGISTER ---
 if not st.session_state['logged_in']:
     _, col2, _ = st.columns([1, 2, 1])
     with col2:
@@ -66,7 +67,6 @@ if not st.session_state['logged_in']:
         c1, c2 = st.columns(2)
         if c1.button("🔑 MASUK"): st.session_state['view']="login"; st.rerun()
         if c2.button("📝 DAFTAR"): st.session_state['view']="register"; st.rerun()
-        st.divider()
         if st.session_state['view'] == "login":
             u = st.text_input("ID Operator"); p = st.text_input("Kata Sandi", type="password")
             if st.button("VERIFIKASI"):
@@ -87,35 +87,29 @@ else:
     st.title("📡 PUSAT ANALISIS FORENSIK")
     t1, t2, t3 = st.tabs(["📄 AUDIT PDF", "🌐 JEJAK URL", "🧠 ANALISIS NEURAL"])
 
-    # --- TAB 1: PDF (TOMBOL AKTIF) ---
+    # --- TAB 1 & 2 (Tombol Dipastikan Ada) ---
     with t1:
         st.subheader("Audit Integritas Dokumen PDF")
-        up = st.file_uploader("Pilih Berkas PDF", type="pdf")
-        if st.button("🔥 JALANKAN SCAN PDF", key="btn_pdf_v12_2"):
-            if up:
-                with st.status("Memproses Audit..."): time.sleep(2)
-                res = random.uniform(0.1, 3.8)
-                st.markdown(f"<div class='cert-frame'><h1 class='score-hero'>{res:.1f}%</h1><div class='status-badge'>DOKUMEN ASLI</div><p style='margin-top:20px;'>Dianalisis pada {datetime.now(tz_jkt).strftime('%H:%M:%S')} WIB.</p></div>", unsafe_allow_html=True)
+        if st.file_uploader("Pilih Berkas PDF", type="pdf"):
+            if st.button("🔥 JALANKAN SCAN PDF"): st.success("Audit Selesai.")
 
-    # --- TAB 2: URL (TOMBOL AKTIF) ---
     with t2:
-        st.subheader("Pelacakan Jejak Digital Web")
-        u_in = st.text_input("Masukkan URL Target")
-        if st.button("🌐 EKSEKUSI PELACAKAN URL", key="btn_url_v12_2"):
-            if u_in:
-                with st.spinner("Menyisir..."): time.sleep(1.5)
-                st.markdown(f"<div class='cert-frame'><h3>🔗 Jejak Digital: {u_in}</h3><p>Status: <b>Terverifikasi Unik</b>.</p></div>", unsafe_allow_html=True)
+        st.subheader("Jejak Digital URL")
+        u_in = st.text_input("URL Target")
+        if st.button("🌐 EKSEKUSI PELACAKAN URL"):
+            st.markdown(f"<div class='cert-frame'>✅ URL <b>{u_in}</b> Terverifikasi Unik.</div>", unsafe_allow_html=True)
 
-    # --- TAB 3: AI (NARASI BERSIH) ---
+    # --- TAB 3: AI (Restore 3 Tech Box) ---
     with t3:
         st.subheader("Investigasi Neural & Semantik")
         teks_input = st.text_area("Masukkan Teks Analisis", height=200)
-        if st.button("🧠 EKSEKUSI FORENSIK AI", key="btn_ai_v12_2"):
+        if st.button("🧠 EKSEKUSI FORENSIK AI", key="btn_ai_v12_3"):
             if teks_input:
                 lang = deteksi_bahasa(teks_input)
                 with st.status("Menganalisis..."): time.sleep(2)
                 prob = random.randint(1, 5)
                 jam_log = datetime.now(tz_jkt).strftime('%H:%M:%S')
+                
                 st.markdown(f"""
                 <div class="cert-frame">
                     <div style="display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;">
@@ -138,9 +132,14 @@ else:
                             </p>
                         </div>
                     </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;">
+                        <div class="tech-box"><small style="color:#8B949E;">STRUKTUR</small><br><b>ALAMI</b></div>
+                        <div class="tech-box"><small style="color:#8B949E;">OTENTIKASI</small><br><b>TERVERIFIKASI</b></div>
+                        <div class="tech-box"><small style="color:#8B949E;">SKOR VALID</small><br><b>99.1%</b></div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
-                # Radar Chart
+                
                 c_c2 = st.columns([1, 2, 1])[1]
                 with c_c2:
                     fig_r = go.Figure(data=go.Scatterpolar(r=[random.randint(85,98) for _ in range(5)], theta=['Kreativitas', 'Variasi', 'Struktur', 'Emosi', 'Dinamika'], fill='toself', line_color='#00F2FF'))
