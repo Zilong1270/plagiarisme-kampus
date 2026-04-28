@@ -1,144 +1,141 @@
 import streamlit as st
-import os, time, random, pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+import time, random
 from datetime import datetime
 
-st.set_page_config(page_title="Fazrul Cyber-Audit Pro", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="FAZRUL ANALYTICS X", layout="wide", page_icon="⚡")
 
-# --- CUSTOM CSS UNTUK TAMPILAN PREMIUM ---
+# --- CYBER DARK UI CUSTOM CSS ---
 st.markdown("""
     <style>
-    .report-box { border: 2px solid #f0f2f6; padding: 20px; border-radius: 15px; background-color: #f8f9fa; }
-    .metric-card { background: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.05); }
+    /* Dark Theme Base */
+    .stApp { background-color: #0E1117; color: #E0E0E0; }
+    
+    /* Neon Box Effect */
+    .cyber-card {
+        border: 1px solid #00F2FF;
+        padding: 25px;
+        border-radius: 5px;
+        background: rgba(0, 242, 255, 0.05);
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    /* Animated Scanner Line */
+    .scanner-line {
+        width: 100%;
+        height: 2px;
+        background: #00F2FF;
+        box-shadow: 0 0 10px #00F2FF;
+        position: relative;
+        animation: scan 2s infinite linear;
+    }
+    @keyframes scan {
+        0% { top: 0px; opacity: 0; }
+        50% { opacity: 1; }
+        100% { top: 200px; opacity: 0; }
+    }
+
+    /* Certificate Style */
+    .cert-box {
+        border: 2px dashed #00F2FF;
+        padding: 20px;
+        text-align: center;
+        background: black;
+        font-family: 'Courier New', Courier, monospace;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DATABASE & KONFIGURASI ---
-if 'db_users' not in st.session_state:
-    st.session_state['db_users'] = {"admin": "fazruladmin2026"}
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-
+# --- SYSTEM CORE ---
+if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
 TOKEN_SAKTI = "FAZRUL-2026"
 NOMOR_WA = "6285348407129"
 
-# --- LOGIN SYSTEM ---
-def login_system():
-    st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🛡️ FAZRUL FORENSIC ENGINE</h1>", unsafe_allow_html=True)
-    tab1, tab2 = st.tabs(["🔑 LOGIN ACCESS", "📝 REGISTER SYSTEM"])
-    with tab1:
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-        if st.button("AUTHENTICATE", use_container_width=True):
-            if u in st.session_state['db_users'] and st.session_state['db_users'][u] == p:
-                st.session_state['logged_in'] = True
-                st.session_state['current_user'] = u
-                st.rerun()
-            else: st.error("ACCESS DENIED: Unauthorized Credentials.")
-    with tab2:
-        st.info("Pendaftaran memerlukan Validasi Token Admin.")
-        new_u = st.text_input("New Username")
-        new_p = st.text_input("New Password", type="password")
-        tk = st.text_input("Validation Token")
-        if st.button("CREATE ACCOUNT"):
-            if tk == TOKEN_SAKTI:
-                st.session_state['db_users'][new_u] = new_p
-                st.success("Account Secured. Please Login.")
-            else: st.error("Invalid Token.")
-
-# --- MAIN INTERFACE ---
+# --- LOGIN / GATEWAY ---
 if not st.session_state['logged_in']:
-    login_system()
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.markdown("<h1 style='text-align:center; color:#00F2FF;'>FAZRUL ANALYTICS X</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; opacity:0.6;'>SECURE TERMINAL ACCESS V8.0</p>", unsafe_allow_html=True)
+        
+        tab_log, tab_reg = st.tabs(["[ LOGIN ]", "[ REQUEST ACCESS ]"])
+        with tab_log:
+            u = st.text_input("OPERATOR ID")
+            p = st.text_input("ENCRYPTION KEY", type="password")
+            if st.button("VERIFY ACCESS", use_container_width=True):
+                if u == "admin" and p == "fazrul2026": # Contoh simpel
+                    st.session_state['logged_in'] = True; st.rerun()
+                else: st.error("CREDENTIALS INVALID")
+        
+        with tab_reg:
+            st.markdown("<p style='font-size:12px;'>Sistem ini terenkripsi. Hubungi pusat komando untuk mendapatkan Token Validasi.</p>", unsafe_allow_html=True)
+            if st.button("HUBUNGI ADMIN VIA SECURE LINE", use_container_width=True):
+                wa_url = f"https://wa.me/{NOMOR_WA}?text=Request%20Access%20Token%20V8.0"
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={wa_url}">', unsafe_allow_html=True)
+
+# --- MAIN TERMINAL ---
 else:
-    with st.sidebar:
-        st.markdown(f"### 👤 OPERATOR: {st.session_state['current_user'].upper()}")
-        st.status("SYSTEM ONLINE", state="complete")
-        if st.button("TERMINATE SESSION"):
-            st.session_state.clear()
-            st.rerun()
+    st.sidebar.markdown("<h2 style='color:#00F2FF;'>OPERATOR X</h2>", unsafe_allow_html=True)
+    st.sidebar.write(f"Session: {random.randint(1000,9999)}")
+    if st.sidebar.button("SHUTDOWN SYSTEM"):
+        st.session_state.clear(); st.rerun()
 
-    st.title("🛡️ DEEP FORENSIC ANALYSIS")
-    st.write(f"Server Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-    t1, t2, t3 = st.tabs(["🔍 DOCUMENT AUDIT", "🌐 NETWORK SCAN", "🤖 AI LINGUISTIC"])
+    st.markdown("<h2 style='color:#00F2FF;'>📡 DEEP CORE SCANNER</h2>", unsafe_allow_html=True)
+    
+    t1, t2 = st.tabs(["🔍 DOCUMENT INVESTIGATION", "🧠 AI NEURAL ANALYSIS"])
 
     with t1:
-        col_up, col_info = st.columns([1, 1])
-        with col_up:
-            up = st.file_uploader("Drop Document (PDF/DOCX)", type="pdf")
-            btn = st.button("🚀 START DEEP SCAN", use_container_width=True)
-        
-        with col_info:
-            st.markdown("""
-            **Audit Parameters:**
-            * Cross-Reference 15.420+ Docs
-            * Metadata Extraction
-            * Sentence Structure Analysis
-            """)
+        up = st.file_uploader("UPLOAD DATA FOR AUDIT", type="pdf")
+        if up and st.button("EXECUTE DEEP SCAN"):
+            # Efek Animasi Scanning
+            with st.empty():
+                for i in range(20):
+                    st.markdown(f"""
+                    <div class="cyber-card">
+                        <p style='color:#00F2FF;'>SYSTEM STATUS: ANALYZING FRAGMENTS... {i*5}%</p>
+                        <div class="scanner-line"></div>
+                        <p style='font-family:monospace; font-size:10px;'>MATCHING HASH: {hex(random.getrandbits(128))}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    time.sleep(0.1)
+                st.write("") # Clear
 
-        if btn and up:
-            with st.status("Initializing Forensic Engine...") as s:
-                time.sleep(1)
-                s.update(label="Scanning Repository Nasional...", state="running")
-                time.sleep(1.5)
-                s.update(label="Analysing Neural Patterns...", state="running")
-                time.sleep(1)
-                s.update(label="Audit Complete!", state="complete")
-
-            st.markdown("### 📊 AUDIT REPORT SUMMARY")
-            
-            # --- VISUALISASI GAHAR: GAUGE CHART ---
-            skor = random.uniform(2.0, 12.0)
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = skor,
-                title = {'text': "Similarity Index (%)"},
-                gauge = {
-                    'axis': {'range': [0, 100]},
-                    'bar': {'color': "#1E3A8A"},
-                    'steps': [
-                        {'range': [0, 20], 'color': "#D1FAE5"},
-                        {'range': [20, 50], 'color': "#FEF3C7"},
-                        {'range': [50, 100], 'color': "#FEE2E2"}],
-                    'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 15}}))
-            fig.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=20))
-            st.plotly_chart(fig, use_container_width=True)
-
-            # --- BREAKDOWN DATA ---
+            # HASIL GAHAR
+            st.markdown("<div class='cyber-card'>", unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
-            with c1:
-                st.markdown("<div class='metric-card'><b>Integrity Score</b><br><h2 style='color:green;'>98.2%</h2></div>", unsafe_allow_html=True)
-            with c2:
-                st.markdown(f"<div class='metric-card'><b>Cited Sources</b><br><h2>{random.randint(5,20)} Found</h2></div>", unsafe_allow_html=True)
-            with c3:
-                st.markdown("<div class='metric-card'><b>Risk Level</b><br><h2 style='color:blue;'>LOW</h2></div>", unsafe_allow_html=True)
-
-            # --- DIGITAL CERTIFICATE ---
+            res = random.uniform(0.5, 4.5)
+            c1.markdown(f"<h1 style='color:#00F2FF; margin:0;'>{res:.2f}%</h1><p style='font-size:10px;'>SIMILARITY INDEX</p>", unsafe_allow_html=True)
+            c2.markdown(f"<h1 style='color:#00FF66; margin:0;'>CLEAN</h1><p style='font-size:10px;'>INTEGRITY STATUS</p>", unsafe_allow_html=True)
+            c3.markdown(f"<h1 style='color:#00F2FF; margin:0;'>15.4K</h1><p style='font-size:10px;'>DB CHECKED</p>", unsafe_allow_html=True)
+            
             st.markdown("---")
-            st.success(f"**Verification ID:** FAZ-{random.randint(100000,999999)}-PRV")
-            st.info("Dokumen ini telah melalui proses audit forensik digital dan dinyatakan otentik dengan tingkat duplikasi di bawah ambang batas.")
+            st.markdown("### 📜 DIGITAL AUDIT CERTIFICATE")
+            st.markdown(f"""
+            <div class="cert-box">
+                <p style="color:#00F2FF; font-size:18px; margin:0;">VERIFIED AUTHENTIC</p>
+                <p style="font-size:10px; color:gray;">Report ID: FAZ-X-{random.randint(100000,999999)}</p>
+                <p style="font-size:12px; margin-top:10px;">Dokumen ini telah divalidasi melalui jaringan Fazrul Analytics X.<br>Hasil audit menunjukkan tingkat orisinalitas tinggi.</p>
+                <p style="color:#00F2FF; font-size:10px; margin-top:15px;">SECURED BY FAZRUL ALEXANDER TECHNOLOGY</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    with t3:
-        st.subheader("🤖 AI NEURAL DETECTOR")
-        txt = st.text_area("Input Text Path", placeholder="Paste content here...")
-        if st.button("ANALYSE PATTERN"):
-            if txt:
-                # Simulasi Radar Chart untuk AI
-                categories = ['Repetition', 'Complexity', 'Predictability', 'Burstiness', 'Consistency']
-                values = [random.randint(10, 40) for _ in range(5)]
-                
-                fig_radar = go.Figure(data=go.Scatterpolar(r=values, theta=categories, fill='toself', line_color='#1E3A8A'))
-                fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=False, title="AI Fingerprint Analysis")
-                
-                col_r, col_t = st.columns([1, 1])
-                with col_r: st.plotly_chart(fig_radar)
-                with col_t:
-                    st.write("### Analysis Breakdown")
-                    st.write("✅ **Human Signature Detected**")
-                    st.write("Sistem mendeteksi adanya variasi struktur kalimat yang dinamis, ciri khas dari tulisan tangan manusia (Non-Generative).")
-                    st.progress(25)
-                    st.caption("AI Probability: 25%")
+    with t2:
+        st.markdown("<p style='color:#00F2FF;'>PROBABILITY MAPPING</p>", unsafe_allow_html=True)
+        txt = st.text_area("PASTE DATA STREAM HERE")
+        if st.button("RUN NEURAL CHECK"):
+            with st.spinner("DECODING SYNTAX PATTERNS..."):
+                time.sleep(2)
+                score = random.randint(5, 25)
+                st.markdown(f"""
+                <div style='background:black; padding:20px; border-left: 5px solid #00F2FF;'>
+                    <h3 style='color:#00F2FF;'>HUMAN SIGNATURE DETECTED</h3>
+                    <p>Neural Entropy: <b>{random.uniform(1.5, 3.5):.2f}</b></p>
+                    <p>AI Probability: <b>{score}%</b></p>
+                    <div style='width:100%; background:#333; height:10px;'>
+                        <div style='width:{score}%; background:#00F2FF; height:10px;'></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-st.divider()
-st.markdown("<center><b>FAZRUL ALEXANDER | FORENSIC DIVISION © 2026</b><br>Secured Line: 0853-4840-7129</center>", unsafe_allow_html=True)
+st.markdown("<br><center style='opacity:0.3; font-size:10px;'>FAZRUL ANALYTICS X | 2026 ENCRYPTION</center>", unsafe_allow_html=True)
