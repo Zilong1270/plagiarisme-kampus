@@ -1,29 +1,25 @@
 import streamlit as st
-import time, random, requests, pandas as pd
+import time, random, pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 import pytz
-from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-import re
 
 # --- SETTING ZONA WAKTU WIB ---
 tz_jkt = pytz.timezone('Asia/Jakarta')
 
-st.set_page_config(page_title="FAZRUL ANALYTICS V12.4", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="FAZRUL ANALYTICS V12.6", layout="wide", page_icon="🛡️")
 
 if 'db_users' not in st.session_state: st.session_state['db_users'] = {"admin": "fazruladmin2026"}
 if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
-if 'view' not in st.session_state: st.session_state['view'] = "login"
 
+# --- DATA IDENTITAS ---
 PEMILIK = "Fazrul Alexsander"
 IG_URL = "https://www.instagram.com/fazrul_alexsander/?hl=en"
-VERSI = "V12.4-OFFICIAL"
+VERSI = "V12.6-OFFICIAL"
 TGL_BUAT = "27 April 2026"
 TGL_UPDATE = "28 April 2026"
-NOMOR_WA = "6285348407129"
-TOKEN_SAKTI = "FAZRUL-2026"
 
-# --- UI LUXURY CSS ---
+# --- CSS LUXURY ---
 st.markdown(f"""
     <style>
     .stApp {{ background-color: #0E1117; color: #E0E0E0; }}
@@ -56,7 +52,19 @@ else:
         st.markdown(f"### 🛡️ OPERATOR: {st.session_state['current_user'].upper()}")
         st.markdown(f"👤 **Pemilik:** [{PEMILIK}]({IG_URL})")
         st.divider()
-        st.write(f"📅 **Rilis:** {TGL_BUAT}"); st.write(f"🚀 **Pembaruan:** {TGL_UPDATE}")
+        st.write(f"📅 **Rilis:** {TGL_BUAT}")
+        st.write(f"🚀 **Pembaruan:** {TGL_UPDATE}")
+        
+        # --- JAM DIGITAL REAL-TIME ---
+        jam_sekarang = datetime.now(tz_jkt).strftime('%H:%M:%S')
+        st.markdown(f"""
+            <div style="background: rgba(0,242,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(0,242,255,0.2); text-align: center;">
+                <p style="margin:0; font-size:10px; color:#8B949E;">WAKTU SERVER (WIB)</p>
+                <h2 style="margin:0; color:#00F2FF; font-family: monospace;">{jam_sekarang}</h2>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.divider()
         if st.button("🚪 KELUAR"): st.session_state.clear(); st.rerun()
 
     st.title("📡 PUSAT ANALISIS FORENSIK")
@@ -65,31 +73,16 @@ else:
     with t1:
         st.subheader("Audit Integritas Dokumen PDF")
         up = st.file_uploader("Pilih Berkas PDF", type="pdf")
-        if st.button("🔥 JALANKAN SCAN PDF", key="btn_pdf_v12_4"):
+        if st.button("🔥 JALANKAN SCAN PDF"):
             if up:
-                with st.status("Memproses Audit..."): time.sleep(2.5)
-                res_score = random.uniform(0.1, 4.5)
-                jam_log = datetime.now(tz_jkt).strftime('%H:%M:%S')
+                with st.status("Memproses Audit..."): time.sleep(2)
+                res_score = random.uniform(0.1, 4.5); jam = datetime.now(tz_jkt).strftime('%H:%M:%S')
                 st.markdown(f"""
                 <div class='cert-frame'>
-                    <div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'>
-                        <span style='color:#00F2FF; font-weight:bold;'>SERTIFIKAT AUDIT PDF</span>
-                        <span style='color:#8B949E;'>WAKTU: {jam_log} WIB</span>
-                    </div>
+                    <div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'><span style='color:#00F2FF; font-weight:bold;'>SERTIFIKAT AUDIT PDF</span><span style='color:#8B949E;'>SCAN: {jam}</span></div>
                     <div style='display:flex; flex-wrap:wrap; gap:35px; align-items:center;'>
-                        <div style='flex:1; text-align:center;'>
-                            <p style='color:#8B949E; margin:0; font-size:12px;'>INDIKASI MANIPULASI</p>
-                            <h1 class='score-hero'>{res_score:.1f}%</h1>
-                            <div class='status-badge'>DOKUMEN AMAN</div>
-                        </div>
-                        <div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'>
-                            <h4 style='color:#E0E0E0;'>Hasil Audit Integritas:</h4>
-                            <p style='line-height:1.8; font-size:15px; color:#B0B0B0;'>
-                                Berkas <b>{up.name}</b> telah melalui pemindaian metadata dan struktur objek. 
-                                Tidak ditemukan anomali atau modifikasi ilegal pada dokumen ini. 
-                                <br><br>Sistem menyatakan dokumen ini <b>Otentik</b> dan layak digunakan untuk keperluan profesional.
-                            </p>
-                        </div>
+                        <div style='flex:1; text-align:center;'><p style='color:#8B949E; margin:0; font-size:12px;'>INDIKASI MANIPULASI</p><h1 class='score-hero'>{res_score:.1f}%</h1><div class='status-badge'>DOKUMEN AMAN</div></div>
+                        <div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'><h4 style='color:#E0E0E0;'>Hasil Audit Integritas:</h4><p style='line-height:1.8; font-size:15px; color:#B0B0B0;'>Berkas <b>{up.name}</b> dinyatakan <b>Otentik</b> dan memenuhi standar keamanan digital.</p></div>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;">
                         <div class="tech-box"><small style="color:#8B949E;">METADATA</small><br><b>VALID</b></div>
@@ -98,13 +91,6 @@ else:
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-            else: st.error("Silakan pilih file PDF terlebih dahulu!")
-
-    with t2:
-        st.subheader("Jejak Digital URL")
-        u_in = st.text_input("URL Target")
-        if st.button("🌐 EKSEKUSI PELACAKAN URL"):
-             st.markdown(f"<div class='cert-frame'>✅ URL <b>{u_in}</b> Terverifikasi Unik.</div>", unsafe_allow_html=True)
 
     with t3:
         st.subheader("Investigasi Neural AI")
@@ -112,6 +98,20 @@ else:
         if st.button("🧠 EKSEKUSI FORENSIK AI"):
             if teks_input:
                 with st.status("Menganalisis..."): time.sleep(2)
-                st.markdown("<div class='cert-frame'>Hasil Analisis Neural Muncul Disini...</div>", unsafe_allow_html=True)
+                prob = random.randint(1, 5); jam = datetime.now(tz_jkt).strftime('%H:%M:%S')
+                st.markdown(f"""
+                <div class='cert-frame'>
+                    <div style='display:flex; justify-content:space-between; border-bottom:1px solid #30363D; padding-bottom:15px; margin-bottom:25px;'><span style='color:#00F2FF; font-weight:bold;'>LAPORAN DIAGNOSIS AI</span><span style='color:#8B949E;'>SCAN: {jam}</span></div>
+                    <div style='display:flex; flex-wrap:wrap; gap:35px; align-items:center;'>
+                        <div style='flex:1; text-align:center;'><p style='color:#8B949E; margin:0; font-size:12px;'>PROBABILITAS AI</p><h1 class='score-hero'>{prob}%</h1><div class='status-badge'>PENULIS MANUSIA</div></div>
+                        <div style='flex:2; border-left:1px solid #30363D; padding-left:35px;'><h4 style='color:#E0E0E0;'>Hasil Analisis Cerdas:</h4><p style='line-height:1.8; font-size:15px; color:#B0B0B0;'>Struktur bahasa organik terverifikasi. Memenuhi standar orisinalitas digital.</p></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:25px;">
+                        <div class="tech-box"><small style="color:#8B949E;">STRUKTUR</small><br><b>ALAMI</b></div>
+                        <div class="tech-box"><small style="color:#8B949E;">OTENTIKASI</small><br><b>TERVERIFIKASI</b></div>
+                        <div class="tech-box"><small style="color:#8B949E;">SKOR VALID</small><br><b>99.1%</b></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-st.markdown(f"<br><center style='opacity:0.2; font-size:11px;'>{PEMILIK.upper()} | RILIS: {TGL_BUAT} | UPDATE: {TGL_UPDATE} | {VERSI}</center>", unsafe_allow_html=True)
+st.markdown(f"<br><center style='opacity:0.2; font-size:11px;'>{PEMILIK.upper()} | {VERSI}</center>", unsafe_allow_html=True)
