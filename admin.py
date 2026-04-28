@@ -1,30 +1,24 @@
 ﻿import streamlit as st
-import os
+import pandas as pd
 
-st.set_page_config(page_title="Admin Monitoring", page_icon="🔐")
+st.set_page_config(page_title="Admin Panel Fazrul", layout="wide")
+st.title("📊 Monitoring User (Google Sheets)")
 
-pass_admin = st.sidebar.text_input("Password Master", type="password")
+# GANTI LINK DI BAWAH INI DENGAN LINK GOOGLE SHEETS KAMU
+# Jangan lupa ujungnya diganti /export?format=csv
+URL_SHEET = "MASUKKAN_LINK_GOOGLE_SHEETS_KAMU_DISINI"
 
-if pass_admin == "fazruladmin2026":
-    st.title("📊 Monitoring Jejak Digital")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("🕵️ Log Aktivitas (Real-time)")
-        if os.path.exists("log_akses.txt"):
-            with open("log_akses.txt", "r") as f:
-                logs = f.readlines()
-            st.text_area("Aktivitas Terbaru:", value="".join(logs[::-1]), height=400)
-            
-    with col2:
-        st.subheader("👥 Daftar Anggota")
-        if os.path.exists("users_data.txt"):
-            with open("users_data.txt", "r") as f:
-                users = f.readlines()
-            for u in users:
-                st.write(f"✅ {u.strip()}")
-        else:
-            st.write("Belum ada user yang daftar.")
-
+pw = st.sidebar.text_input("Password Admin", type="password")
+if pw == "fazruladmin2026":
+    if URL_SHEET == "MASUKKAN_LINK_GOOGLE_SHEETS_KAMU_DISINI":
+        st.info("Admin siap. Silakan masukkan link Google Sheets di dalam kode admin.py")
+    else:
+        try:
+            df = pd.read_csv(URL_SHEET)
+            st.dataframe(df, use_container_width=True)
+            if st.button("Perbarui Data"):
+                st.rerun()
+        except:
+            st.error("Gagal membaca data. Pastikan link Sheets sudah 'Public' (Anyone with link).")
 else:
-    st.warning("Masukkan Password Master untuk melihat Jejak Digital.")
+    st.warning("Akses Terbatas. Masukkan Password.")

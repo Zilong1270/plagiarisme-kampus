@@ -1,81 +1,46 @@
 ﻿import streamlit as st
-import time, random
+import requests
+import time
 from datetime import datetime
 
 st.set_page_config(page_title="Fazrul Anti-Plagiat Pro", layout="wide", page_icon="🛡️")
 
-# --- FUNGSI JEJAK DIGITAL ---
-def catat_log(info):
-    print(f"🕵️ JEJAK DIGITAL: [{datetime.now().strftime('%H:%M:%S')}] {info}")
+def catat_ke_google(nama):
+    # Link Form yang sudah diubah jadi formResponse
+    url = "https://docs.google.com/forms/d/e/1FAIpQLSe_Fpsx_VXdiap6GQyrj7ZdPeUYtUEyGeicroHkiINSvkDd6Q/formResponse"
+    # Entry ID dari link yang kamu berikan
+    data = {"entry.546015476": f"User: {nama} | Waktu: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"}
+    try:
+        requests.post(url, data=data)
+    except:
+        pass
 
-# --- INISIALISASI SESSION ---
-if 'step' not in st.session_state: st.session_state.step = "login"
-
-# --- 1. HALAMAN LOGIN ---
-if st.session_state.step == "login":
+if 'user' not in st.session_state:
     st.title("🛡️ Portal Keamanan Fazrul")
-    identitas = st.text_input("Masukkan Nama atau No. HP")
-    
-    if st.button("Dapatkan Kode Akses"):
-        if identitas:
-            st.session_state.user = identitas
-            st.session_state.otp = "1227" 
-            st.session_state.step = "otp"
-            st.rerun()
-
-# --- 2. HALAMAN VERIFIKASI ---
-elif st.session_state.step == "otp":
-    st.subheader("🛡️ Verifikasi Perangkat")
-    st.write(f"Halo **{st.session_state.user}**, masukkan kode rahasia.")
-    st.info("Tips: Masukkan kode '1227'")
-    
-    input_user = st.text_input("Masukkan Kode", type="password")
-    
-    if st.button("Konfirmasi"):
-        if input_user == st.session_state.otp:
-            catat_log(f"LOGIN BERHASIL: {st.session_state.user}")
-            st.session_state.step = "dashboard"
-            st.success("Akses Diterima!")
+    st.subheader("Silakan Login")
+    nama = st.text_input("Masukkan Nama atau No HP")
+    if st.button("Masuk Sekarang"):
+        if nama:
+            st.session_state.user = nama
+            catat_ke_google(nama)
+            st.success(f"Selamat Datang, {nama}!")
             time.sleep(1)
             st.rerun()
         else:
-            st.error("Kode salah!")
-
-# --- 3. HALAMAN UTAMA (FITUR LENGKAP) ---
-elif st.session_state.step == "dashboard":
-    # Sidebar untuk Profil & Logout
+            st.error("Nama tidak boleh kosong!")
+else:
     with st.sidebar:
-        st.success(f"User: {st.session_state.user}")
-        if st.button("Keluar"):
-            st.session_state.step = "login"
+        st.success(f"Aktif: {st.session_state.user}")
+        if st.button("Log Out"):
+            del st.session_state.user
             st.rerun()
-        st.divider()
-        st.caption("© 2026 Fazrul Alexander")
 
-    st.title(f"🛡️ Fazrul Plagiat-Check V4.5")
-    st.write(f"Selamat bekerja, **{st.session_state.user}**!")
-
-    # Tab Fitur
-    tab1, tab2, tab3 = st.tabs(["📄 Cek Dokumen PDF", "🌐 Cek Link URL", "🤖 Deteksi Konten AI"])
-
+    st.title("🛡️ Fazrul Plagiat-Check V4.5")
+    tab1, tab2, tab3 = st.tabs(["📄 PDF Scan", "🌐 URL Check", "🤖 AI Detector"])
+    
     with tab1:
-        st.subheader("Analisis File PDF")
-        uploaded_file = st.file_uploader("Pilih file PDF", type="pdf")
-        if uploaded_file:
-            if st.button("Mulai Scan PDF"):
-                with st.spinner("Sedang membandingkan dengan database..."):
-                    time.sleep(2)
-                    st.success("Scan Selesai!")
-                    st.metric("Skor Plagiarisme", "12.5%")
-
+        st.file_uploader("Upload file dokumen", type="pdf")
     with tab2:
-        st.subheader("Analisis Website")
-        url = st.text_input("Masukkan Link URL (http/https)")
-        if st.button("Cek Website"):
-            st.info(f"Menganalisis konten dari: {url}")
-
+        st.text_input("Tempel link website di sini")
     with tab3:
-        st.subheader("Deteksi Tulisan AI")
-        teks = st.text_area("Tempelkan teks di sini untuk cek buatan AI atau bukan:")
-        if st.button("Analisis Teks"):
-            st.warning("Probabilitas AI: 85% (Terdeteksi ChatGPT)")
+        st.text_area("Masukkan teks untuk cek indikasi AI")
