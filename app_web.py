@@ -8,7 +8,6 @@ import PyPDF2
 st.set_page_config(page_title="Fazrul Plagiat-Check Pro", layout="wide", page_icon="🛡️")
 
 # --- 2. INISIALISASI STATUS (SESSION STATE) ---
-# Agar status admin terkunci meskipun di-refresh
 if 'role' not in st.session_state:
     st.session_state['role'] = 'user'
 
@@ -36,35 +35,43 @@ def deteksi_ai_logic(teks):
     prob = (pattern / len(words)) * 100
     return min(prob * 6, 99.2)
 
-# --- 4. SIDEBAR (IDENTITAS & PINTU RAHASIA) ---
+# --- 4. SIDEBAR (IDENTITAS, LOGIN, & FOOTER 2026) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=70)
     st.title("Sistem Kontrol")
     
+    # Identitas Pemilik
     st.write("👤 **Fazrul Alexander**")
-    st.markdown(f"[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/fazrul_alexsander/?hl=en)")
+    st.markdown(f"""
+    [![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/fazrul_alexsander/?hl=en)
+    """)
+    
     st.divider()
 
     # KOTAK PERINTAH (Login & Keluar)
     perintah = st.text_input("System ID / Command", placeholder="Ketik perintah...", type="password")
 
-    # Logika Masuk
     if perintah == "fazruladmin2026":
         st.session_state['role'] = 'admin'
         st.success("Mode Admin Terkunci!")
-    
-    # Logika Keluar (Otomatis ke User)
     elif perintah.lower() == "keluar":
         st.session_state['role'] = 'user'
         st.rerun()
 
-# --- 5. PEMBAGIAN HALAMAN (ADMIN vs USER) ---
+    # FOOTER IDENTITAS V3.8 (YANG TADI HILANG)
+    st.markdown("---")
+    st.caption("© 2026 Dibuat oleh Fazrul Alexander")
+    st.caption("📌 **Versi:** V4.3 (Hybrid)")
+    st.caption("📅 **Update:** Selasa, 28 April 2026")
+    st.caption("🚀 *Sistem Audit Orisinalitas Mandiri*")
+
+# --- 5. LOGIKA HALAMAN (ADMIN vs USER) ---
 if st.session_state['role'] == 'admin':
     # ==========================
     #      HALAMAN ADMIN
     # ==========================
     st.title("📊 Fazrul Private Dashboard")
-    st.warning("Status: Admin Mode (Refresh Tetap Aktif)")
+    st.warning("Status: Admin Mode (Terkunci)")
     st.info("Ketik 'keluar' di sidebar untuk kembali ke tampilan user.")
 
     col1, col2 = st.columns(2)
@@ -79,8 +86,8 @@ if st.session_state['role'] == 'admin':
 
     with col2:
         st.subheader("📈 Statistik Server")
-        st.write("Uptime: 99.9%")
         st.write("Mode: Hybrid Search Enabled")
+        st.write("Target: Web Scrutiny & Local Matching")
         if st.button("Hapus Cache Sistem"):
             st.cache_resource.clear()
             st.success("Cache dibersihkan!")
@@ -92,7 +99,7 @@ else:
     st.title("🛡️ Fazrul Plagiat-Check V3.8")
     st.write("Audit Orisinalitas Mandiri, Scan URL, dan Deteksi AI")
     
-    tab1, tab2, tab3 = st.tabs(["📄 Uji PDF", "🌐 Uji URL", "🤖 Cek AI"])
+    tab1, tab2, tab3 = st.tabs(["📄 Uji Dokumen PDF", "🌐 Uji Link URL", "🤖 Deteksi Tulisan AI"])
 
     with tab1:
         st.subheader("Analisis Dokumen PDF")
