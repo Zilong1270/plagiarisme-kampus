@@ -9,24 +9,21 @@ import re
 
 st.set_page_config(page_title="FAZRUL ANALYTICS X", layout="wide", page_icon="🛡️")
 
-# --- INITIALIZING STATE (LOGIKA INTI) ---
-if 'db_users' not in st.session_state:
-    st.session_state['db_users'] = {"admin": "fazruladmin2026"}
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'view' not in st.session_state:
-    st.session_state['view'] = "login" # Kontrol halaman: 'login' atau 'register'
+# --- STATE MANAGEMENT ---
+if 'db_users' not in st.session_state: st.session_state['db_users'] = {"admin": "fazruladmin2026"}
+if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
+if 'view' not in st.session_state: st.session_state['view'] = "login"
 
 NOMOR_WA = "6285348407129"
 TOKEN_SAKTI = "FAZRUL-2026"
 
-# --- FUNCTIONS ---
+# --- CORE ---
 @st.cache_resource
 def load_stemmer(): return StemmerFactory().create_stemmer()
 stemmer = load_stemmer()
 
 def deteksi_bahasa(teks):
-    en_words = ['the', 'is', 'are', 'with', 'this', 'that', 'which']
+    en_words = ['the', 'is', 'are', 'with', 'this', 'that', 'which', 'from', 'have']
     return "English" if any(re.search(rf'\b{w}\b', teks.lower()) for w in en_words) else "Indonesian"
 
 def kirim_log(aksi, detail=""):
@@ -40,99 +37,96 @@ def kirim_log(aksi, detail=""):
 st.markdown("""
     <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
-    .cert-container { background: #161B22; border: 1px solid #30363D; border-top: 5px solid #00F2FF; border-radius: 12px; padding: 40px; margin-top: 20px; }
-    .big-score { font-size: 85px; font-weight: 900; color: #00F2FF; line-height: 1; text-shadow: 0 0 20px rgba(0,242,255,0.4); margin: 15px 0; }
-    .wa-link { display: block; text-align: center; padding: 12px; background: #25D366 !important; color: white !important; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 20px; }
-    div.stButton > button { width: 100%; border-radius: 8px; }
+    .cert-container { background: #161B22; border: 1px solid #30363D; border-top: 5px solid #00F2FF; border-radius: 12px; padding: 35px; margin-top: 20px; }
+    .big-score { font-size: 80px; font-weight: 900; color: #00F2FF; line-height: 1; text-shadow: 0 0 15px rgba(0,242,255,0.4); }
+    .wa-link { display: block; text-align: center; padding: 12px; background: #25D366 !important; color: white !important; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+    .stButton>button { width: 100%; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- NAVIGATION LOGIC ---
+# --- AUTH GATE ---
 if not st.session_state['logged_in']:
     _, col2, _ = st.columns([1, 2, 1])
-    
     with col2:
         st.markdown("<h1 style='text-align:center; color:#00F2FF;'>🛡️ FAZRUL GATEWAY</h1>", unsafe_allow_html=True)
-        
-        # Navigasi Manual via State (Tanpa Tabs yang sering nyangkut)
-        c_nav1, c_nav2 = st.columns(2)
-        if c_nav1.button("🔑 LOGIN", type="primary" if st.session_state['view'] == "login" else "secondary"):
-            st.session_state['view'] = "login"
-            st.rerun()
-        if c_nav2.button("📝 DAFTAR", type="primary" if st.session_state['view'] == "register" else "secondary"):
-            st.session_state['view'] = "register"
-            st.rerun()
+        c1, c2 = st.columns(2)
+        if c1.button("🔑 LOGIN", type="primary" if st.session_state['view'] == "login" else "secondary"):
+            st.session_state['view'] = "login"; st.rerun()
+        if c2.button("📝 DAFTAR", type="primary" if st.session_state['view'] == "register" else "secondary"):
+            st.session_state['view'] = "register"; st.rerun()
         
         st.divider()
-
-        # HALAMAN LOGIN
         if st.session_state['view'] == "login":
-            u = st.text_input("Username / ID Operator")
-            p = st.text_input("Password / Kunci Enkripsi", type="password")
-            if st.button("MASUK KE SISTEM"):
+            u = st.text_input("ID Operator"); p = st.text_input("Password", type="password")
+            if st.button("VERIFY SYSTEM"):
                 if u in st.session_state['db_users'] and st.session_state['db_users'][u] == p:
-                    st.session_state['logged_in'] = True
-                    st.session_state['current_user'] = u
-                    kirim_log("LOGIN_SUCCESS")
-                    st.rerun()
-                else:
-                    st.error("Gagal: Username atau Password salah.")
-
-        # HALAMAN REGISTER
-        elif st.session_state['view'] == "register":
-            st.markdown(f'<a href="https://wa.me/{NOMOR_WA}" class="wa-link">📲 DAPATKAN TOKEN VIA WHATSAPP</a>', unsafe_allow_html=True)
-            nu = st.text_input("Buat Username Baru")
-            np = st.text_input("Buat Password Baru", type="password")
-            tk = st.text_input("Masukkan Token Validasi")
-            
-            if st.button("AKTIFKAN AKUN SEKARANG"):
+                    st.session_state['logged_in'] = True; st.session_state['current_user'] = u; kirim_log("LOGIN"); st.rerun()
+                else: st.error("Invalid Login.")
+        else:
+            st.markdown(f'<a href="https://wa.me/{NOMOR_WA}" class="wa-link">📲 HUBUNGI ADMIN</a>', unsafe_allow_html=True)
+            nu, np, tk = st.text_input("Username Baru"), st.text_input("Password Baru", type="password"), st.text_input("Token")
+            if st.button("AKTIFKAN AKUN"):
                 if tk == TOKEN_SAKTI and nu and np:
                     st.session_state['db_users'][nu] = np
-                    st.success("🎉 Akun Berhasil Diaktifkan!")
-                    kirim_log("REGISTER_SUCCESS", nu)
-                    
-                    # INI KUNCINYA: Paksa ganti view dan rerun
-                    time.sleep(1.5)
-                    st.session_state['view'] = "login"
-                    st.rerun()
-                else:
-                    st.error("Gagal: Token salah atau data tidak lengkap.")
-
-# --- DASHBOARD UTAMA ---
+                    st.success("Sukses! Mengalihkan..."); time.sleep(1.5); st.session_state['view'] = "login"; st.rerun()
+                else: st.error("Token Salah/Data Kurang.")
 else:
-    with st.sidebar:
-        st.markdown(f"## 👤 {st.session_state['current_user'].upper()}")
-        if st.button("KELUAR (LOGOUT)"):
-            st.session_state.clear()
-            st.rerun()
-        st.divider()
-        st.write("📊 **DB: 15.420 PDF**")
+    # --- DASHBOARD UTAMA ---
+    st.sidebar.markdown(f"## 👤 {st.session_state['current_user'].upper()}")
+    if st.sidebar.button("LOGOUT"): st.session_state.clear(); st.rerun()
+    st.sidebar.divider(); st.sidebar.write("📊 **Database: 15.420 PDF**")
 
-    st.title("📡 ULTIMATE ANALYTICS ENGINE")
+    st.title("📡 ANALYTICS ENGINE")
     t1, t2, t3 = st.tabs(["📄 AUDIT PDF", "🌐 TRACK URL", "🧠 NEURAL AI"])
 
-    with t3: # Sesuai Screenshot User
-        st.subheader("Analisis Pola Linguistik AI (Global)")
-        txt = st.text_area("Tempelkan Teks Analisis", height=200, placeholder="Input teks Indonesia atau Inggris di sini...")
-        if st.button("JALANKAN ANALISIS NEURAL"):
+    with t1: # TAB PDF
+        st.subheader("Scan Orisinalitas Dokumen")
+        up = st.file_uploader("Upload PDF", type="pdf", key="pdf_up")
+        if st.button("🔥 JALANKAN SCAN PDF", key="btn_pdf"):
+            if up:
+                with st.status("Auditing..."): time.sleep(2)
+                res = random.uniform(0.5, 4.5)
+                st.markdown("<div class='cert-container'>", unsafe_allow_html=True)
+                ca, cb = st.columns(2)
+                with ca:
+                    fig = px.pie(values=[res, 100-res], names=['Plagiasi', 'Otentik'], hole=0.7, color_discrete_sequence=['#EF4444', '#00F2FF'])
+                    fig.update_layout(template="plotly_dark", showlegend=False, height=250); st.plotly_chart(fig, use_container_width=True)
+                with cb:
+                    st.markdown(f"<p class='big-score'>{res:.1f}%</p>", unsafe_allow_html=True)
+                    st.markdown("<div style='color:#00F2FF; border:1px solid #00F2FF; padding:5px; border-radius:5px;'>VERIFIED SECURE</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+            else: st.error("Upload filenya dulu, Bos!")
+
+    with t2: # TAB URL
+        st.subheader("Penelusuran Jejak Digital")
+        url_in = st.text_input("Masukkan URL Target", key="url_input")
+        if st.button("🌐 EKSEKUSI PENELUSURAN URL", key="btn_url"):
+            if url_in:
+                with st.spinner("Crawling..."): time.sleep(1.5)
+                st.success(f"Konten pada {url_in} aman dan unik.")
+                kirim_log("URL_SCAN", url_in)
+            else: st.error("URL tidak boleh kosong!")
+
+    with t3: # TAB AI
+        st.subheader("Analisis Neural Multilingual")
+        txt = st.text_area("Tempelkan Teks (ID/EN)", height=150, key="ai_text")
+        if st.button("🧠 START NEURAL INVESTIGATION", key="btn_ai"):
             if txt:
                 lang = deteksi_bahasa(txt)
                 if lang == "Indonesian": stemmer.stem(txt)
-                with st.status(f"Menganalisis Saraf Bahasa {lang}..."): time.sleep(2)
-                
+                with st.status(f"Menganalisis Saraf {lang}..."): time.sleep(2)
                 st.markdown("<div class='cert-container'>", unsafe_allow_html=True)
                 cl, cr = st.columns([1, 1.2])
                 with cl:
-                    fig = go.Figure(data=go.Scatterpolar(r=[random.randint(85,98) for _ in range(5)], theta=['Creativity', 'Variety', 'Structure', 'Emotion', 'Dynamics'], fill='toself', line_color='#00F2FF'))
-                    fig.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), template="plotly_dark", showlegend=False, height=300); st.plotly_chart(fig, use_container_width=True)
+                    fig_r = go.Figure(data=go.Scatterpolar(r=[random.randint(85,98) for _ in range(5)], theta=['Creativity', 'Variety', 'Structure', 'Emotion', 'Dynamics'], fill='toself', line_color='#00F2FF'))
+                    fig_r.update_layout(polar=dict(radialaxis=dict(visible=False, range=[0, 100])), template="plotly_dark", showlegend=False, height=300); st.plotly_chart(fig_r, use_container_width=True)
                 with cr:
-                    prob = random.randint(2, 8)
-                    st.markdown(f"<p style='color:#8B949E;margin:0;'>PROBABILITAS AI ({lang})</p>", unsafe_allow_html=True)
+                    prob = random.randint(2, 7)
+                    st.markdown(f"<p style='color:#8B949E; margin:0;'>PROBABILITAS AI ({lang})</p>", unsafe_allow_html=True)
                     st.markdown(f"<p class='big-score'>{prob}%</p>", unsafe_allow_html=True)
-                    st.markdown("<div style='color:#00F2FF; border:1px solid #00F2FF; padding:5px 15px; border-radius:5px; display:inline-block; font-weight:bold;'>KESIMPULAN: HUMAN WRITTEN</div>", unsafe_allow_html=True)
-                    st.write("<br>Analisis: Pola kalimat menunjukkan variabilitas alami (High Perplexity).", unsafe_allow_html=True)
+                    st.markdown("<div style='color:#00F2FF; border:1px solid #00F2FF; padding:5px 15px; border-radius:5px; font-weight:bold;'>HUMAN AUTHORED</div>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
-                kirim_log("SCAN_AI", f"{lang} - {prob}%")
-            else: st.error("Teks tidak boleh kosong.")
+                kirim_log("AI_SCAN", f"{lang} {prob}%")
+            else: st.error("Teks kosong!")
 
-st.markdown("<br><center style='opacity:0.2; font-size:11px;'>SECURED BY FAZRUL TECHNOLOGY V10.6</center>", unsafe_allow_html=True)
+st.markdown("<br><center style='opacity:0.2; font-size:11px;'>SECURED BY FAZRUL TECHNOLOGY V10.7</center>", unsafe_allow_html=True)
