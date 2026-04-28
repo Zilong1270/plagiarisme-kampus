@@ -1,24 +1,48 @@
 ﻿import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Admin Panel Fazrul", layout="wide")
-st.title("📊 Monitoring User (Google Sheets)")
+st.set_page_config(page_title="Admin Panel Fazrul", layout="wide", page_icon="📊")
 
-# GANTI LINK DI BAWAH INI DENGAN LINK GOOGLE SHEETS KAMU
-# Jangan lupa ujungnya diganti /export?format=csv
-URL_SHEET = "MASUKKAN_LINK_GOOGLE_SHEETS_KAMU_DISINI"
+st.title("📊 Panel Monitoring Admin")
+st.write("Pantau jejak digital user secara real-time.")
 
-pw = st.sidebar.text_input("Password Admin", type="password")
+# Link otomatis dari terminal
+URL_SHEET = "LINK_GOOGLE_SHEETS_KAMU"
+
+# Sidebar untuk keamanan
+with st.sidebar:
+    st.header("Konfigurasi")
+    pw = st.text_input("Password Admin", type="password")
+    st.divider()
+    st.caption("v4.5 - Monitoring System")
+
 if pw == "fazruladmin2026":
-    if URL_SHEET == "MASUKKAN_LINK_GOOGLE_SHEETS_KAMU_DISINI":
-        st.info("Admin siap. Silakan masukkan link Google Sheets di dalam kode admin.py")
-    else:
-        try:
-            df = pd.read_csv(URL_SHEET)
-            st.dataframe(df, use_container_width=True)
-            if st.button("Perbarui Data"):
+    st.subheader("📑 Buku Tamu Digital (Google Sheets)")
+    
+    try:
+        # Mengambil data dari Google Sheets
+        df = pd.read_csv(URL_SHEET)
+        
+        # Menampilkan tabel dengan desain yang bagus
+        st.dataframe(
+            df, 
+            use_container_width=True, 
+            column_config={
+                "Timestamp": "Waktu Input",
+                "entry.546015476": "Detail Aktivitas User"
+            }
+        )
+        
+        # Tombol Refresh dan Statistik Simpel
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Segarkan Data"):
                 st.rerun()
-        except:
-            st.error("Gagal membaca data. Pastikan link Sheets sudah 'Public' (Anyone with link).")
+        with col2:
+            st.write(f"**Total Aktivitas:** {len(df)} entri")
+
+    except Exception as e:
+        st.error("Gagal terhubung ke Database.")
+        st.info("Pastikan link Google Sheets sudah di-share 'Public' (Anyone with link).")
 else:
-    st.warning("Akses Terbatas. Masukkan Password.")
+    st.warning("Silakan masukkan password admin untuk membuka data.")
