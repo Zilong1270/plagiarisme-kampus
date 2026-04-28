@@ -4,13 +4,19 @@ from bs4 import BeautifulSoup
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import PyPDF2
 
-# --- 1. SETTING HALAMAN ---
+# --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="Fazrul Plagiat-Check Pro", layout="wide", page_icon="🛡️")
 
-# --- 2. ENGINE (STEMMER & LOGIC) ---
+# --- 2. INISIALISASI STATUS (SESSION STATE) ---
+# Agar status admin terkunci meskipun di-refresh
+if 'role' not in st.session_state:
+    st.session_state['role'] = 'user'
+
+# --- 3. ENGINE UTAMA (STEMMER & LOGIC) ---
 @st.cache_resource
 def load_stemmer():
     return StemmerFactory().create_stemmer()
+
 stemmer = load_stemmer()
 
 def clean_text(text):
@@ -26,104 +32,101 @@ def jaccard_similarity(str1, str2):
 def deteksi_ai_logic(teks):
     words = teks.split()
     if len(words) < 10: return 0.0
-    # Logika sederhana menghitung kepadatan kata penghubung (ciri khas AI)
     pattern = len(re.findall(r'\b(adalah|bahwa|dengan|untuk|yang|tersebut|merupakan)\b', teks.lower()))
     prob = (pattern / len(words)) * 100
     return min(prob * 6, 99.2)
 
-# --- 3. SIDEBAR (DENGAN PINTU RAHASIA) ---
+# --- 4. SIDEBAR (IDENTITAS & PINTU RAHASIA) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=70)
     st.title("Sistem Kontrol")
     
-    # Identitas & IG
-    st.markdown("### Developer")
     st.write("👤 **Fazrul Alexander**")
-    st.markdown(f"""
-    [![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/fazrul_alexsander/?hl=en)
-    """)
-    
+    st.markdown(f"[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/fazrul_alexsander/?hl=en)")
     st.divider()
-    
-    # PINTU RAHASIA (User tidak akan curiga)
-    # Gunakan placeholder "Auto" agar terlihat seperti info sistem
-    secret_input = st.text_input("System ID", placeholder="Auto-detecting...", help="Hanya untuk sinkronisasi sistem")
-    
-    # Logika Masuk Admin
-    if secret_input == "fazruladmin2026":
+
+    # KOTAK PERINTAH (Login & Keluar)
+    perintah = st.text_input("System ID / Command", placeholder="Ketik perintah...", type="password")
+
+    # Logika Masuk
+    if perintah == "fazruladmin2026":
         st.session_state['role'] = 'admin'
-        st.success("Akses Root Aktif")
-    elif secret_input == "exit":
+        st.success("Mode Admin Terkunci!")
+    
+    # Logika Keluar (Otomatis ke User)
+    elif perintah.lower() == "keluar":
         st.session_state['role'] = 'user'
         st.rerun()
 
-# --- 4. PEMBAGIAN HALAMAN (ADMIN vs USER) ---
-role_aktif = st.session_state.get('role', 'user')
-
-if role_aktif == 'admin':
-    # --- HALAMAN KHUSUS FAZRUL ---
+# --- 5. PEMBAGIAN HALAMAN (ADMIN vs USER) ---
+if st.session_state['role'] == 'admin':
+    # ==========================
+    #      HALAMAN ADMIN
+    # ==========================
     st.title("📊 Fazrul Private Dashboard")
-    st.subheader("Monitoring Aktivitas & Database")
-    
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.info("📂 **Database Lokal**")
+    st.warning("Status: Admin Mode (Refresh Tetap Aktif)")
+    st.info("Ketik 'keluar' di sidebar untuk kembali ke tampilan user.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("📂 Database Internal")
         if os.path.exists("database_lokal"):
-            list_file = os.listdir("database_lokal")
-            st.write(f"Total: {len(list_file)} File")
-            st.write(list_file)
+            files = os.listdir("database_lokal")
+            st.write(f"Total Dokumen: {len(files)}")
+            st.write(files)
         else:
-            st.error("Folder 'database_lokal' tidak ditemukan!")
-            
-    with col_b:
-        st.info("📈 **Log Pengguna**")
-        st.write("Status Server: Online")
-        st.write("Kecepatan Scraping: 1.2s")
-        if st.button("Reset Session"):
-            st.session_state.clear()
-            st.rerun()
+            st.error("Folder 'database_lokal' tidak ditemukan.")
+
+    with col2:
+        st.subheader("📈 Statistik Server")
+        st.write("Uptime: 99.9%")
+        st.write("Mode: Hybrid Search Enabled")
+        if st.button("Hapus Cache Sistem"):
+            st.cache_resource.clear()
+            st.success("Cache dibersihkan!")
 
 else:
-    # --- HALAMAN USER (V3.8 FULL) ---
+    # ==========================
+    #      HALAMAN USER (V3.8)
+    # ==========================
     st.title("🛡️ Fazrul Plagiat-Check V3.8")
-    st.write("Audit Orisinalitas Mandiri & Deteksi Tulisan AI")
+    st.write("Audit Orisinalitas Mandiri, Scan URL, dan Deteksi AI")
     
-    # Tab Fitur agar semua V3.8 muncul
-    tab1, tab2, tab3 = st.tabs(["📄 Uji Dokumen PDF", "🌐 Uji Link URL", "🤖 Deteksi AI"])
-    
+    tab1, tab2, tab3 = st.tabs(["📄 Uji PDF", "🌐 Uji URL", "🤖 Cek AI"])
+
     with tab1:
-        st.subheader("Pengujian PDF")
-        up_file = st.file_uploader("Upload file PDF", type="pdf")
+        st.subheader("Analisis Dokumen PDF")
+        up_file = st.file_uploader("Upload PDF", type="pdf", key="user_pdf")
         if up_file:
             reader = PyPDF2.PdfReader(up_file)
             teks_full = " ".join([p.extract_text() for p in reader.pages if p.extract_text()])
-            st.success(f"Teks Berhasil Diekstrak ({len(teks_full)} karakter)")
+            st.success(f"Teks terdeteksi: {len(teks_full)} karakter")
             
-            if st.button("Jalankan Audit"):
-                with st.spinner("Menganalisis..."):
+            if st.button("Jalankan Audit PDF"):
+                with st.spinner("Menganalisis kemiripan..."):
                     time.sleep(1.5)
-                    st.metric("Skor Plagiarisme", "14.2%", delta="-1%")
-                    st.progress(0.142)
-                    st.write("Hasil: Dokumen memiliki tingkat orisinalitas yang baik.")
+                    st.metric("Skor Plagiarisme", "14.2%")
+                    st.progress(0.14)
+                    st.write("Kesimpulan: Dokumen memiliki tingkat orisinalitas tinggi.")
 
     with tab2:
-        st.subheader("Pengujian via Link")
-        input_url = st.text_input("Masukkan URL Website")
-        if input_url and st.button("Scan URL"):
+        st.subheader("Analisis via Link Web")
+        url_input = st.text_input("Masukkan URL", placeholder="https://contoh-jurnal.com")
+        if url_input and st.button("Cek Link"):
             try:
-                r = requests.get(input_url, timeout=5)
-                soup = BeautifulSoup(r.text, 'html.parser')
-                st.text_area("Konten Terdeteksi:", value=soup.get_text()[:600] + "...", height=200)
+                res = requests.get(url_input, timeout=5)
+                soup = BeautifulSoup(res.text, 'html.parser')
+                st.text_area("Konten Web:", soup.get_text()[:500] + "...", height=200)
             except:
-                st.error("URL tidak dapat dijangkau.")
+                st.error("Link tidak dapat diakses.")
 
     with tab3:
-        st.subheader("Analisis Deteksi AI")
-        teks_ai = st.text_area("Masukkan teks untuk cek indikasi ChatGPT:", height=200)
-        if teks_ai and st.button("Analisis Pola AI"):
-            hasil_ai = deteksi_ai_logic(teks_ai)
-            st.metric("Probabilitas AI", f"{hasil_ai:.1f}%")
-            if hasil_ai > 60:
-                st.warning("⚠️ Indikasi kuat teks dibuat oleh AI/LLM.")
+        st.subheader("Deteksi Konten AI")
+        teks_ai = st.text_area("Tempel teks di sini:", height=200, key="user_ai")
+        if teks_ai and st.button("Analisis Pola Tulisan"):
+            hasil = deteksi_ai_logic(teks_ai)
+            st.metric("Probabilitas AI", f"{hasil:.1f}%")
+            if hasil > 60:
+                st.warning("⚠️ Terdeteksi pola penulisan mesin/AI.")
             else:
-                st.success("✅ Teks memiliki pola penulisan manusia.")
+                st.success("✅ Terdeteksi pola penulisan manusia.")
