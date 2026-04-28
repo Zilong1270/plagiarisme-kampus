@@ -6,7 +6,7 @@ import pytz
 
 # --- CORE SYSTEM ---
 tz_jkt = pytz.timezone('Asia/Jakarta')
-st.set_page_config(page_title="FAZRUL ANALYTICS V14.0", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="FAZRUL ANALYTICS V14.1", layout="wide", page_icon="🛡️")
 
 # --- DATABASE & NAVIGATION ---
 if 'db_users' not in st.session_state: 
@@ -19,8 +19,8 @@ if 'logged_in' not in st.session_state:
 # --- IDENTITAS RESMI ---
 PEMILIK = "Fazrul Alexsander"
 IG_URL = "https://www.instagram.com/fazrul_alexsander/?hl=en"
-WA_URL = "https://wa.me/6282283311894" # Nomor WA Resmi Bos Fazrul
-VERSI = "V14.0-FINAL-COMM"
+WA_URL = "https://wa.me/6282283311894"
+VERSI = "V14.1-ELITE"
 
 # --- CSS LUXURY ---
 st.markdown(f"""
@@ -55,47 +55,54 @@ if st.session_state['page'] == 'welcome':
             <div class='main-card'>
                 <div class='avatar-large'>👤</div>
                 <h1 style='color:#00F2FF; margin:0;'>{PEMILIK}</h1>
-                <p style='color:#8B949E; letter-spacing:2px; font-size:12px;'>OFFICIAL SECURITY DIVISION</p>
+                <p style='color:#8B949E; letter-spacing:2px; font-size:12px;'>FORENSIC & SECURITY DIVISION</p>
                 <hr style='border:0; border-top:1px solid #30363D; margin:30px 0;'>
-                <p style='color:#B0B0B0; margin-bottom:20px;'>Hubungi Admin untuk Bantuan:</p>
-                <a href='{IG_URL}' target='_blank' class='contact-btn ig-theme'>📸 INSTAGRAM</a>
-                <a href='{WA_URL}' target='_blank' class='contact-btn wa-theme'>💬 WHATSAPP</a>
+                <p style='color:#00F2FF; font-weight:bold; margin-bottom:20px;'>SILAKAN PILIH MODE AKSES:</p>
             </div>
         """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📝 DAFTAR AKUN OPERATOR", use_container_width=True):
+        # KALIMAT BARU YANG LEBIH GAHAR
+        if st.button("➕ AJUKAN AKSES OPERATOR BARU", use_container_width=True):
             st.session_state['page'] = 'daftar'; st.rerun()
-        if st.button("🔓 LOGIN SISTEM", use_container_width=True):
+        
+        if st.button("🔓 VERIFIKASI IDENTITAS (LOGIN)", use_container_width=True):
             st.session_state['page'] = 'login'; st.rerun()
+            
+        st.markdown(f"""
+            <center style='margin-top:25px;'>
+                <a href='{IG_URL}' target='_blank' class='contact-btn ig-theme'>📸 INSTAGRAM</a>
+                <a href='{WA_URL}' target='_blank' class='contact-btn wa-theme'>💬 WHATSAPP</a>
+            </center>
+        """, unsafe_allow_html=True)
 
-# --- 2. HALAMAN DAFTAR ---
+# --- 2. HALAMAN DAFTAR (REGISTRASI) ---
 elif st.session_state['page'] == 'daftar':
     _, col2, _ = st.columns([1, 1.2, 1])
     with col2:
-        st.markdown("<br><br><h2 style='text-align:center; color:#00F2FF;'>REGISTRASI</h2>", unsafe_allow_html=True)
-        new_u = st.text_input("Buat ID")
-        new_p = st.text_input("Buat Password", type="password")
-        if st.button("✅ DAFTAR SEKARANG", use_container_width=True):
+        st.markdown("<br><br><h2 style='text-align:center; color:#00F2FF;'>REGISTRASI OTORITAS</h2><p style='text-align:center; color:#8B949E;'>Buat kredensial keamanan baru</p>", unsafe_allow_html=True)
+        new_u = st.text_input("SET ID OPERATOR")
+        new_p = st.text_input("SET PASSWORD", type="password")
+        if st.button("✅ AKTIFKAN AKSES", use_container_width=True):
             if new_u and new_p:
                 st.session_state['db_users'][new_u] = new_p
-                st.success("Berhasil! Mengarahkan ke Halaman Login...")
+                st.success("Akses Berhasil Didaftarkan!")
+                st.info("Mengarahkan ke Tahap Verifikasi Login...")
                 time.sleep(2)
                 st.session_state['page'] = 'login'; st.rerun()
-        st.markdown(f"<center><p style='font-size:12px; color:#586069;'>Kendala daftar? <a href='{WA_URL}' style='color:#25D366;'>Chat WhatsApp</a></p></center>", unsafe_allow_html=True)
         if st.button("⬅️ KEMBALI"): st.session_state['page'] = 'welcome'; st.rerun()
 
 # --- 3. HALAMAN LOGIN ---
 elif st.session_state['page'] == 'login' and not st.session_state['logged_in']:
     _, col2, _ = st.columns([1, 1.2, 1])
     with col2:
-        st.markdown("<br><br><h2 style='text-align:center; color:#00F2FF;'>LOGIN</h2>", unsafe_allow_html=True)
+        st.markdown("<br><br><h2 style='text-align:center; color:#00F2FF;'>OTENTIKASI</h2><p style='text-align:center; color:#8B949E;'>Masuk ke Server Utama</p>", unsafe_allow_html=True)
         u = st.text_input("ID OPERATOR")
         p = st.text_input("PASSWORD", type="password")
-        if st.button("🔓 MASUK", use_container_width=True):
+        if st.button("🔓 BUKA AKSES SISTEM", use_container_width=True):
             if u in st.session_state['db_users'] and st.session_state['db_users'][u] == p:
                 st.session_state['logged_in'] = True; st.rerun()
-            else: st.error("Salah!")
+            else: st.error("Identitas Tidak Dikenali!")
         if st.button("⬅️ KEMBALI"): st.session_state['page'] = 'welcome'; st.rerun()
 
 # --- 4. DASHBOARD ---
@@ -104,8 +111,8 @@ elif st.session_state['logged_in']:
         st.markdown(f"### 🛡️ {PEMILIK}")
         st.markdown(f"<a href='{WA_URL}' target='_blank' class='contact-btn wa-theme' style='display:block; text-align:center;'>💬 Chat Admin</a>", unsafe_allow_html=True)
         st.divider()
-        if st.button("🚪 LOGOUT", use_container_width=True): st.session_state.clear(); st.rerun()
+        if st.button("🚪 TERMINASI SESI (LOGOUT)", use_container_width=True): st.session_state.clear(); st.rerun()
     st.title("📡 PUSAT ANALISIS FORENSIK")
-    st.success("Sistem Berjalan Normal.")
+    st.success("Sesi Operator Aktif. Enkripsi Berjalan.")
 
 st.markdown(f"<br><center style='opacity:0.2; font-size:10px;'>{PEMILIK} | {VERSI}</center>", unsafe_allow_html=True)
