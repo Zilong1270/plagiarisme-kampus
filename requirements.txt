@@ -1,6 +1,8 @@
-streamlit
-Sastrawi
+﻿streamlit
+sastrawi
 PyPDF2
 requests
 beautifulsoup4
+pillow
 pandas
+numpy
