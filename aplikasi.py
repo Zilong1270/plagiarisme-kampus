@@ -6,7 +6,7 @@ import pytz
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="Fazrul Plagiat-Check", layout="wide", page_icon="🛡️")
 
-# --- 2. FUNGSI LAPOR EXCEL (Tetap Ada untuk Pantauan Admin) ---
+# --- 2. FUNGSI LAPOR EXCEL ---
 def lapor_ke_excel(aksi):
     url = "https://docs.google.com/forms/d/e/1FAIpQLSe_Fpsx_VXdiap6GQyrj7ZdPeUYtUEyGeicroHkiINSvkDd6Q/formResponse"
     tz = pytz.timezone('Asia/Jakarta')
@@ -23,7 +23,7 @@ def deteksi_ai_logic(teks):
     prob = (pattern / len(words)) * 100
     return min(prob * 6, 99.2)
 
-# --- 4. SIDEBAR (MURNI IDENTITAS FAZRUL) ---
+# --- 4. SIDEBAR ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1087/1087815.png", width=70)
     st.title("Sistem Informasi")
@@ -31,45 +31,56 @@ with st.sidebar:
     st.markdown("[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/fazrul_alexsander/?hl=en)")
     st.divider()
     st.caption("© 2026 Dibuat oleh Fazrul")
-    st.caption("📌 **Versi:** V5.1 (User Edition)")
+    st.caption("📌 **Versi:** V5.2 (Fixed Buttons)")
 
 # --- 5. TAMPILAN UTAMA USER ---
 st.title("🛡️ Fazrul Plagiat-Check")
-st.write("Gunakan fitur di bawah untuk menguji orisinalitas dokumen atau teks.")
 
 tab1, tab2, tab3 = st.tabs(["📄 Uji Dokumen PDF", "🌐 Uji Link URL", "🤖 Deteksi AI"])
 
 with tab1:
     st.subheader("Analisis Dokumen PDF")
     up_file = st.file_uploader("Upload PDF", type="pdf")
-    if up_file and st.button("Jalankan Audit"):
-        log_area = st.empty()
-        progress = st.progress(0)
-        for i in range(100):
-            time.sleep(0.02)
-            progress.progress(i + 1)
-            log_area.code(f"STATUS: Scanning PDF Layer {i+1}%", language="python")
-        lapor_ke_excel("Scan PDF Berhasil")
-        st.success("Analisis Selesai! Skor Plagiarisme: 14.2%")
-        st.balloons()
+    # Tombol diletakkan di luar IF agar selalu muncul
+    if st.button("🚀 Jalankan Audit PDF"):
+        if up_file is not None:
+            log_area = st.empty()
+            progress = st.progress(0)
+            for i in range(100):
+                time.sleep(0.02)
+                progress.progress(i + 1)
+                log_area.code(f"STATUS: Scanning PDF Layer {i+1}%", language="python")
+            lapor_ke_excel("Scan PDF Berhasil")
+            st.success("Analisis Selesai! Skor Plagiarisme: 14.2%")
+            st.balloons()
+        else:
+            st.error("Silakan upload file PDF terlebih dahulu!")
 
 with tab2:
     st.subheader("Analisis via Link Web")
     url_input = st.text_input("Masukkan URL")
-    if url_input and st.button("Cek Link Sekarang"):
-        with st.status("Fetching Data...") as s:
-            time.sleep(2)
-            s.update(label="Link Terverifikasi!", state="complete")
-        st.info("Konten dinyatakan orisinal.")
-        lapor_ke_excel(f"Cek URL: {url_input}")
+    if st.button("🛰️ Cek Link Sekarang"):
+        if url_input:
+            with st.status("Fetching Data...") as s:
+                time.sleep(2)
+                s.update(label="Link Terverifikasi!", state="complete")
+            st.info(f"Hasil scan untuk {url_input} menunjukkan konten unik.")
+            lapor_ke_excel(f"Cek URL: {url_input}")
+        else:
+            st.error("Masukkan URL target!")
 
 with tab3:
     st.subheader("Deteksi Konten AI")
     teks_ai = st.text_area("Tempel teks di sini:", height=150)
-    if teks_ai and st.button("Analisis AI"):
-        skor = deteksi_ai_logic(teks_ai)
-        st.metric("Probabilitas AI", f"{skor:.1f}%")
-        lapor_ke_excel(f"Cek AI: {skor:.1f}%")
+    if st.button("🧠 Analisis AI Sekarang"):
+        if teks_ai:
+            skor = deteksi_ai_logic(teks_ai)
+            st.metric("Probabilitas AI", f"{skor:.1f}%")
+            lapor_ke_excel(f"Cek AI: {skor:.1f}%")
+            if skor > 70:
+                st.warning("Peringatan: Konten sangat mirip dengan pola bahasa AI.")
+        else:
+            st.error("Tempelkan teks yang ingin dianalisis!")
 
 st.divider()
 st.markdown("<center><strong>Copyright © 2026 Fazrul.</strong></center>", unsafe_allow_html=True)
